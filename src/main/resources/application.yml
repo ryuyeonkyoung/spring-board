@@ -5,16 +5,26 @@ server:
 # database 연동 설정
 spring:
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver #mysql최신버전이라는 뜻임
-    url: jdbc:mysql://localhost:3306/db_codingrecipe?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: user_yeon
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/db_yeon?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
     password: 1234
   thymeleaf:
     cache: false
+#spring:
+#  datasource:
+#    driver-class-name: org.h2.Driver
+#    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false
+#    username: sa
+#    password:
+#  thymeleaf:
+#    cache: false
+
 
   # spring data jpa 설정
   jpa:
-    database-platform: org.hibernate.dialect.MySQL8Dialect #mysql버전 주의
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    open-in-view: false
     show-sql: true
     hibernate:
-      ddl-auto: create
+      ddl-auto: create #update나 create는 오류생김.
