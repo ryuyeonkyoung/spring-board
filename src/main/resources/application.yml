@@ -27,4 +27,4 @@ spring:
     open-in-view: false
     show-sql: true
     hibernate:
-      ddl-auto: create #update나 create는 오류생김.
+      ddl-auto: update #한번 create로 실행하고 난 뒤에는 update
