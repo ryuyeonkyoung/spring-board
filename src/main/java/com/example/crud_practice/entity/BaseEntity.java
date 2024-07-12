@@ -10,6 +10,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+//다른 entitiy들에도 공통적으로 들어있어서 만듦
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 @Getter

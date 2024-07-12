@@ -1,10 +1,12 @@
 package com.example.crud_practice.entity;
 
+import com.example.crud_practice.dto.BoardDTO;
 import jakarta.persistence.*;
 import lombok.Generated;
 import lombok.Getter;
 import lombok.Setter;
 
+// DB의 테이블 역할을 하는 클래스
 @Entity
 @Getter
 @Setter
@@ -31,4 +33,15 @@ public class BoardEntity extends BaseEntity{
 
     @Column
     private int fileAttached; // 1 or 0
+
+    //dto에 담겨있던걸 entity에 옮겨담기
+    public static BoardEntity toSaveEntity(BoardDTO boardDTO) {
+        BoardEntity boardEntity = new BoardEntity();
+        boardEntity.setBoardWriter(boardDTO.getBoardWriter());
+        boardEntity.setBoardPass(boardDTO.getBoardPass());
+        boardEntity.setBoardTitle(boardDTO.getBoardTitle());
+        boardEntity.setBoardContents(boardDTO.getBoardContents());
+        boardEntity.setBoardHits(0);
+        return boardEntity;
+    }
 }

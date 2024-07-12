@@ -13,14 +13,12 @@ public class BoardController {
     private final BoardService boardService;
 
     @GetMapping("/save")
-    public String saveForm() {
-        return "save";
-    }
+    public String saveForm() { return "save"; }
 
     @PostMapping("/save")
     public String save(@ModelAttribute BoardDTO boardDTO) {
         System.out.println("boardDTO = " + boardDTO);
-        //boardService.save(boardDTO);
+        boardService.save(boardDTO);
         return "index";
     }
 }
