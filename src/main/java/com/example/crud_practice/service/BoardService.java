@@ -19,26 +19,26 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class BoardService {
-    // 1. DTO를 엔티티로 변환 (변환 과정 생략)
+
     private final BoardRepository boardRepository;
 
-    // 2. Repository를 통해 엔티티를 저장
+    // dto->entity 해서 repository에 저장
     public void save(BoardDTO boardDTO) {
         BoardEntity boardEntity = BoardEntity.toSaveEntity(boardDTO);
         boardRepository.save(boardEntity); //entity타입으로 받음
     }
 
-    //BoardController에서 findAll 메소드로 쓰임.
+    //dto를
     public List<BoardDTO> findAll() {
-        List<BoardEntity> boardEntityList = boardRepository.findAll();
+        List<BoardEntity> boardEntityList = boardRepository.findAll(); //데이터베이스에 있는 모든 엔티티를 리스트 형태로 반환
         List<BoardDTO> boardDTOList = new ArrayList<>();
         for (BoardEntity boardEntity: boardEntityList) {
-            boardDTOList.add(BoardDTO.toBoardDTO(boardEntity));
+            boardDTOList.add(BoardDTO.toBoardDTO(boardEntity)); //조회된 각각의 BoardEntity 객체를 BoardDTO로 변환해서 리스트 형태로 만듦
         }
         return boardDTOList;
     }
 
-    @Transactional
+    @Transactional //하나의 트랜잭션에서 작동하게 하는 애노테이션. 원자성을 띈다(실패하면 롤백)
     public void updateHits(Long id) {
         boardRepository.updateHits(id);
     }
@@ -48,7 +48,7 @@ public class BoardService {
         Optional<BoardEntity> optionalBoardEntity = boardRepository.findById(id);
         if (optionalBoardEntity.isPresent()) {
             BoardEntity boardEntity = optionalBoardEntity.get();
-            BoardDTO boardDTO = BoardDTO.toBoardDTO(boardEntity);
+            BoardDTO boardDTO = BoardDTO.toBoardDTO(boardEntity); //dto로 변환
             return boardDTO;
         } else {
             return null;

@@ -19,6 +19,7 @@ public class BoardController {
     @GetMapping("/save")
     public String saveForm() { return "save"; }
 
+    //DTO를 BoardService로 보내서 저장(거기선 DTO->entity)
     @PostMapping("/save")
     public String save(@ModelAttribute BoardDTO boardDTO) {
         System.out.println("boardDTO = " + boardDTO);
@@ -28,8 +29,8 @@ public class BoardController {
 
     @GetMapping("/")
     public String findAll(Model model) {
-        // DB에서 전체 게시글 데이터를 가져와서 list.html에 보여준다.
-        List<BoardDTO> boardDTOList = boardService.findAll();
+        // DB에서 전체 게시글 데이터(dto형태)를 가져와서 list.html에 보여준다.
+        List<BoardDTO> boardDTOList = boardService.findAll(); //dto 리스트 불러옴
         model.addAttribute("boardList", boardDTOList); //데이터를 뷰로 전달하기 위해 사용하는 메소드
         return "list"; //해당 뷰로 데이터가 전송된다.
     }
@@ -41,7 +42,7 @@ public class BoardController {
             게시글 데이터를 가져와서 detail.html에 출력
         */
         boardService.updateHits(id);
-        BoardDTO boardDTO = boardService.findById(id);
+        BoardDTO boardDTO = boardService.findById(id); //두번의 호출이 발생
         model.addAttribute("board", boardDTO);
         return "detail";
     }
