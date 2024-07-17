@@ -62,4 +62,8 @@ public class BoardService {
         boardRepository.save(boardEntity);
         return findById(boardDTO.getId()); //코드 겹쳐서 그냥 이거 이용
     }
+
+    public void delete(Long id) {
+        boardRepository.deleteById(id);
+    }
 }
