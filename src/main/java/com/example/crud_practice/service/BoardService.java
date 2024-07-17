@@ -54,4 +54,12 @@ public class BoardService {
             return null;
         }
     }
+
+    public BoardDTO update(BoardDTO boardDTO) {
+        //update메소드가 따로 내장되지 않음. save메소드로 update도 하고 insert도 함
+        //insert는 id없고 update는 id있음
+        BoardEntity boardEntity = BoardEntity.toUpdateEntity(boardDTO);
+        boardRepository.save(boardEntity);
+        return findById(boardDTO.getId()); //코드 겹쳐서 그냥 이거 이용
+    }
 }
