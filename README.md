@@ -1,5 +1,6 @@
-# 본 프로젝트는 코딩레시피님의 "스프링부트 게시판 프로젝트"를 공부한 기록입니다.
-# 깃허브 주소 : https://github.com/codingrecipe1/board.git
+#설명
+본 프로젝트는 코딩레시피님의 "스프링부트 게시판 프로젝트"를 공부한 기록입니다.
+깃허브 주소 : https://github.com/codingrecipe1/board.git
 
 # 개발환경
 1. IDE: IntelliJ IDEA Community
