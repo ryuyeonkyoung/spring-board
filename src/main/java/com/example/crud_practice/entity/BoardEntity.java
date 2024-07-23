@@ -32,7 +32,8 @@ public class BoardEntity extends BaseEntity{
     private int boardHits;
 
     @Column
-    private int fileAttached; // 1 or 0
+    private int fileAttached; // 1 or 0 (파일이 있는지 없는지)
+    //boolean은 나중에 처리해야할게 많아서 int를 씀
 
     //dto에 담겨있던걸 entity에 옮겨담기
     public static BoardEntity toSaveEntity(BoardDTO boardDTO) {
