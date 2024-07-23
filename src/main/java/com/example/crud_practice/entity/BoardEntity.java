@@ -6,6 +6,9 @@ import lombok.Generated;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 // DB의 테이블 역할을 하는 클래스
 @Entity
 @Getter
@@ -34,6 +37,10 @@ public class BoardEntity extends BaseEntity{
     @Column
     private int fileAttached; // 1 or 0 (파일이 있는지 없는지)
     //boolean은 나중에 처리해야할게 많아서 int를 씀
+
+    // 부모 정의(자식 BoardFileEntity)
+    @OneToMany(mappedBy = "boardEntity", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<BoardFileEntity> boardFileEntityList = new ArrayList<>();
 
     //dto에 담겨있던걸 entity에 옮겨담기
     public static BoardEntity toSaveEntity(BoardDTO boardDTO) {
