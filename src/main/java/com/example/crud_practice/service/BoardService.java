@@ -51,18 +51,22 @@ public class BoardService {
             6. board_table에 해당 데이터 save 처리
             7. board_file_table에 해당 데이터 save 처리
          */
-            MultipartFile boardFile = boardDTO.getBoardFile(); // 1.
-            String originalFilename = boardFile.getOriginalFilename(); // 2.
-            String storedFileName = System.currentTimeMillis() + "_" + originalFilename; // 3.
-            String savePath = "C:/springboot_img/" + storedFileName; // 4. C:/springboot_img/9802398403948_내사진.jpg
-//            String savePath = "/Users/사용자이름/springboot_img/" + storedFileName; // C:/springboot_img/9802398403948_내사진.jpg
-            boardFile.transferTo(new File(savePath)); // 5.
+            // 자식 데이터가 여러개 있을 수 있는 상황이라 부모데이터 먼저 나와야함.
             BoardEntity boardEntity = BoardEntity.toSaveFileEntity(boardDTO); // dto -> entity. db에 저장하기 전이라 id값이 없다.
             Long savedId = boardRepository.save(boardEntity).getId(); // 엔티티를 데이터베이스에 저장하고, 생성된 기본 키 값을 얻음
             BoardEntity board = boardRepository.findById(savedId).get(); // 1에서 저장된 기본 키를 사용하여 엔티티를 다시 조회
+            for (MultipartFile boardFile: boardDTO.getBoardFile()) {
+                // 원래 이걸로 단일파일 꺼내고 있었는데 반복문으로 하나씩 꺼내서 필요없어짐.
+//                MultipartFile boardFile = boardDTO.getBoardFile(); // 1.
+                String originalFilename = boardFile.getOriginalFilename(); // 2.
+                String storedFileName = System.currentTimeMillis() + "_" + originalFilename; // 3.
+                String savePath = "C:/springboot_img/" + storedFileName; // 4. C:/springboot_img/9802398403948_내사진.jpg
+//            String savePath = "/Users/사용자이름/springboot_img/" + storedFileName; // C:/springboot_img/9802398403948_내사진.jpg
+                boardFile.transferTo(new File(savePath)); // 5.
 
-            BoardFileEntity boardFileEntity = BoardFileEntity.toBoardFileEntity(board, originalFilename, storedFileName);
-            boardFileRepository.save(boardFileEntity);
+                BoardFileEntity boardFileEntity = BoardFileEntity.toBoardFileEntity(board, originalFilename, storedFileName);
+                boardFileRepository.save(boardFileEntity);
+            }
         }
     }
 
