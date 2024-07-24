@@ -3,6 +3,8 @@ package com.example.crud_practice.service;
 import com.example.crud_practice.dto.BoardDTO;
 import com.example.crud_practice.entity.BaseEntity;
 import com.example.crud_practice.entity.BoardEntity;
+import com.example.crud_practice.entity.BoardFileEntity;
+import com.example.crud_practice.repository.BoardFileRepository;
 import com.example.crud_practice.repository.BoardRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ import java.util.Optional;
 public class BoardService {
 
     private final BoardRepository boardRepository;
+    private final BoardFileRepository boardFileRepository;
 
     // dto->entity 해서 repository에 저장
     public void save(BoardDTO boardDTO) throws IOException {
@@ -54,10 +57,16 @@ public class BoardService {
             String savePath = "C:/springboot_img/" + storedFileName; // 4. C:/springboot_img/9802398403948_내사진.jpg
 //            String savePath = "/Users/사용자이름/springboot_img/" + storedFileName; // C:/springboot_img/9802398403948_내사진.jpg
             boardFile.transferTo(new File(savePath)); // 5.
+            BoardEntity boardEntity = BoardEntity.toSaveFileEntity(boardDTO); // dto -> entity. db에 저장하기 전이라 id값이 없다.
+            Long savedId = boardRepository.save(boardEntity).getId(); // 엔티티를 데이터베이스에 저장하고, 생성된 기본 키 값을 얻음
+            BoardEntity board = boardRepository.findById(savedId).get(); // 1에서 저장된 기본 키를 사용하여 엔티티를 다시 조회
+
+            BoardFileEntity boardFileEntity = BoardFileEntity.toBoardFileEntity(board, originalFilename, storedFileName);
+            boardFileRepository.save(boardFileEntity);
         }
     }
 
-    //dto를
+    @Transactional
     public List<BoardDTO> findAll() {
         List<BoardEntity> boardEntityList = boardRepository.findAll(); //데이터베이스에 있는 모든 엔티티를 리스트 형태로 반환
         List<BoardDTO> boardDTOList = new ArrayList<>();
@@ -77,7 +86,9 @@ public class BoardService {
         Optional<BoardEntity> optionalBoardEntity = boardRepository.findById(id);
         if (optionalBoardEntity.isPresent()) {
             BoardEntity boardEntity = optionalBoardEntity.get();
-            BoardDTO boardDTO = BoardDTO.toBoardDTO(boardEntity); //dto로 변환
+            // entity를 dto로 변환.
+            // 여기서 boardFileEntity도 접근하니까 @Transactional 이노테이션이 필요함.
+            BoardDTO boardDTO = BoardDTO.toBoardDTO(boardEntity);
             return boardDTO;
         } else {
             return null;
