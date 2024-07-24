@@ -20,7 +20,8 @@ public class BoardFileEntity extends BaseEntity{
     private String storedFileName;
 
     // 자식 정의(부모 BoardEntity)
-    @ManyToOne(fetch = FetchType.LAZY) // n 대 1. 게시글 하나에 파일 여러개.
+    // 파일 여러개 -> 게시글 하나
+    @ManyToOne(fetch = FetchType.LAZY)
     // Hibernate: alter table board_file_table add constraint FKcfxqly70ddd02xbou0jxgh4o3 foreign key (board_id) references board_table (id)
     @JoinColumn(name = "board_id") // 외래키
     private BoardEntity boardEntity; // 부모 entity 타입으로 적어줘야함.
@@ -29,7 +30,7 @@ public class BoardFileEntity extends BaseEntity{
         BoardFileEntity boardFileEntity = new BoardFileEntity();
         boardFileEntity.setOriginalFileName(originalFileName);
         boardFileEntity.setStoredFileName(storedFileName);
-        boardFileEntity.setBoardEntity(boardEntity);
+        boardFileEntity.setBoardEntity(boardEntity); // pk값이 아니라 부모 entity값을 넘겨줘야한다.
         return boardFileEntity;
     }
 }
