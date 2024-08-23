@@ -50,7 +50,10 @@ public class BoardController {
 
     @GetMapping("/")
     public String findAll(Model model) {
-        // DB에서 전체 게시글 데이터(dto형태)를 가져와서 list.html에 보여준다.
+        /*
+            controller에서는 service의 메소드를 이용한다.
+            entity, dto, repository에 실제로 접근할 수 있는건 controller가 아니라 service이다.
+         */
         List<BoardDTO> boardDTOList = boardService.findAll(); //dto 리스트 불러옴
         model.addAttribute("boardList", boardDTOList); //데이터를 뷰로 전달하기 위해 사용하는 메소드
         return "list"; //해당 뷰로 데이터가 전송된다.

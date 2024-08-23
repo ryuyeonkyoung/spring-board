@@ -72,13 +72,17 @@ public class BoardService {
         }
     }
 
-    // repository에서 Entity리스트를 받아 DTO리스트로 변환한다.
     @Transactional //하나의 트랜잭션에서 작동하게 하는 애노테이션. 원자성을 띈다(실패하면 롤백)
     public List<BoardDTO> findAll() {
-        List<BoardEntity> boardEntityList = boardRepository.findAll(); //데이터베이스에 있는 모든 엔티티를 리스트 형태로 반환
+         /*
+            1. repository에서 entitiy를 리스트 형태로 가져온다.
+            2. entitylist를 dtolist로 바꾼다.
+            3. dtolist를 반환한다.
+         */
+        List<BoardEntity> boardEntityList = boardRepository.findAll();
         List<BoardDTO> boardDTOList = new ArrayList<>();
         for (BoardEntity boardEntity: boardEntityList) {
-            boardDTOList.add(BoardDTO.toBoardDTO(boardEntity)); //조회된 각각의 BoardEntity 객체를 BoardDTO로 변환해서 리스트 형태로 만듦
+            boardDTOList.add(BoardDTO.toBoardDTO(boardEntity));
         }
         return boardDTOList;
     }
