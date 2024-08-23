@@ -28,7 +28,9 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class BoardService {
-
+    // 전통적인 의존성 구조 - DiaryService가 JpaBoardRepository같은 구체적인 구현체에 의존
+    // DIP - DiaryService가 추상화(인터페이스 DiaryRepository)에 의존
+    // 효과 - repository에 의존하지만 JpaBoardRepository가 교체되어도 코드를 변경할 필요가 없다
     private final BoardRepository boardRepository;
     private final BoardFileRepository boardFileRepository;
 
@@ -36,11 +38,11 @@ public class BoardService {
     public void save(BoardDTO boardDTO) throws IOException {
         // 파일 첨부 여부에 따라 로직 분리
         if (boardDTO.getBoardFile().isEmpty()) {
-            // 첨부 파일 없음.
-            BoardEntity boardEntity = BoardEntity.toSaveEntity(boardDTO);
-            boardRepository.save(boardEntity);
+            // 1. 첨부 파일 없음.
+            BoardEntity boardEntity = BoardEntity.toSaveEntity(boardDTO); // dto->entity
+            boardRepository.save(boardEntity); // repository에 저장
         } else {
-            // 첨부 파일 있음.
+            // 2. 첨부 파일 있음.
         /*
             1. DTO에 담긴 파일을 꺼냄
             2. 파일의 이름 가져옴
@@ -70,17 +72,22 @@ public class BoardService {
         }
     }
 
-    @Transactional
+    @Transactional //하나의 트랜잭션에서 작동하게 하는 애노테이션. 원자성을 띈다(실패하면 롤백)
     public List<BoardDTO> findAll() {
-        List<BoardEntity> boardEntityList = boardRepository.findAll(); //데이터베이스에 있는 모든 엔티티를 리스트 형태로 반환
+         /*
+            1. repository에서 entitiy를 리스트 형태로 가져온다.
+            2. entitylist를 dtolist로 바꾼다.
+            3. dtolist를 반환한다.
+         */
+        List<BoardEntity> boardEntityList = boardRepository.findAll();
         List<BoardDTO> boardDTOList = new ArrayList<>();
         for (BoardEntity boardEntity: boardEntityList) {
-            boardDTOList.add(BoardDTO.toBoardDTO(boardEntity)); //조회된 각각의 BoardEntity 객체를 BoardDTO로 변환해서 리스트 형태로 만듦
+            boardDTOList.add(BoardDTO.toBoardDTO(boardEntity));
         }
         return boardDTOList;
     }
 
-    @Transactional //하나의 트랜잭션에서 작동하게 하는 애노테이션. 원자성을 띈다(실패하면 롤백)
+    @Transactional
     public void updateHits(Long id) {
         boardRepository.updateHits(id);
     }
@@ -99,9 +106,10 @@ public class BoardService {
         }
     }
 
+    // save메소드로 update도 하고 insert도 한다.
+    // update는 id save와 달리 id 필요
+    // controller는 service에서 (공개)메소드만 사용. 직접 데이터베이스나 엔티티에 접근하지 않는다.
     public BoardDTO update(BoardDTO boardDTO) {
-        //update메소드가 따로 내장되지 않음. save메소드로 update도 하고 insert도 함
-        //insert는 id없고 update는 id있음
         BoardEntity boardEntity = BoardEntity.toUpdateEntity(boardDTO);
         boardRepository.save(boardEntity);
         return findById(boardDTO.getId()); //코드 겹쳐서 그냥 이거 이용
