@@ -1,7 +1,9 @@
 package com.example.crud_practice.controller;
 
 import com.example.crud_practice.dto.BoardDTO;
+import com.example.crud_practice.dto.CommentDTO;
 import com.example.crud_practice.service.BoardService;
+import com.example.crud_practice.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,22 +15,38 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.List;
 
+// Controller은 HTTP요청을 처리하는 역할을 수행한다.
+// Mapping으로 URL을 매핑하는 것이 HTTP 요청 처리 과정 중 하나이다.
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/board")
 public class BoardController {
     private final BoardService boardService;
+    private final CommentService commentService;
 
+    // 페이지요청용
     @GetMapping("/save")
     public String saveForm() { return "save"; }
 
-    //DTO를 BoardService로 보내서 저장(거기선 DTO->entity)
+    // 데이터 전송용
+    // boardDTO를 받아서 BoardService로 보내 저장 (거기선 DTO->entity)
     @PostMapping("/save")
     public String save(@ModelAttribute BoardDTO boardDTO) throws IOException {
         System.out.println("boardDTO = " + boardDTO);
         boardService.save(boardDTO);
         return "index";
     }
+
+//    @GetMapping("/save")
+//    public String saveForm() {
+//        return "save"; // save.html을 반환하여 폼을 사용자에게 보여줍니다.
+//    }
+//    @PostMapping("/save")
+//    public String save(@ModelAttribute BoardDTO boardDTO) throws IOException {
+//        boardService.save(boardDTO); // BoardDTO를 받아서 처리
+//        return "index"; // 저장 후 index.html로 리디렉션
+//    }
+
 
     @GetMapping("/")
     public String findAll(Model model) {
@@ -47,6 +65,9 @@ public class BoardController {
         */
         boardService.updateHits(id);
         BoardDTO boardDTO= boardService.findById(id);
+        /* 댓글 목록 가져오기 */
+        List<CommentDTO> commentDTOList = commentService.findAll(id);
+        model.addAttribute("commentList", commentDTOList);
         model.addAttribute("board", boardDTO);
         model.addAttribute("page", pageable.getPageNumber());
         return "detail";
