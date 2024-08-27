@@ -35,7 +35,8 @@
     <tr th:if="${board.fileAttached == 1}">
         <th>image</th>
         <td th:each="fileName: ${board.storedFileName}">
-            <img th:src="@{|/upload/${fileName}|}" alt=""></td>
+            <img th:src="@{|/upload/${fileName}|}" alt="">
+        </td>
     </tr>
 </table>
 <button onclick="listReq()">목록</button>
