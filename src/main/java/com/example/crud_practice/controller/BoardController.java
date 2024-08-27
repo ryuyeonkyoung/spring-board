@@ -33,8 +33,11 @@ public class BoardController {
     @PostMapping("/save")
     public String save(@ModelAttribute BoardDTO boardDTO) throws IOException {
         System.out.println("boardDTO = " + boardDTO);
+        if (boardDTO.getBoardFile().get(0).isEmpty())
+            boardDTO.getBoardFile().clear();
+
         boardService.save(boardDTO);
-        return "index";
+        return "redirect:/board/paging";
     }
 
 //    @GetMapping("/save")
@@ -94,7 +97,7 @@ public class BoardController {
     @GetMapping("/delete/{id}")
     public String delete(@PathVariable Long id) {
         boardService.delete(id);
-        return "redirect:/board/";
+        return "redirect:/board/paging";
     }
 
     // /board/paging?page=1

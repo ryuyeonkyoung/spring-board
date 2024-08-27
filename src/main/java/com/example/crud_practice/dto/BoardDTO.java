@@ -51,6 +51,7 @@ public class BoardDTO {
         boardDTO.setBoardHits(boardEntity.getBoardHits());
         boardDTO.setBoardCreatedTime(boardEntity.getCreatedTime());
         boardDTO.setBoardUpdatedTime(boardEntity.getUpdatedTime());
+
         if (boardEntity.getFileAttached() == 0) {
             boardDTO.setFileAttached(boardEntity.getFileAttached()); // 0
         } else {
@@ -61,6 +62,7 @@ public class BoardDTO {
                 originalFileNameList.add(boardFileEntity.getOriginalFileName());
                 storedFileNameList.add(boardFileEntity.getStoredFileName());
             }
+
             // 파일 이름을 가져가야 함.
             // orginalFileName, storedFileName : board_file_table(BoardFileEntity)
             // join
