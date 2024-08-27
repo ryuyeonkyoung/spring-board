@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import java.util.logging.Logger;
+
 //데이터 전송 관리
 //entity와 dto를 주고받는 역할
 // DTO -> Entity (Entity Class)
@@ -28,6 +30,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class BoardService {
+    private static final Logger logger = Logger.getLogger(BoardService.class.getName());
     // 전통적인 의존성 구조 - DiaryService가 JpaBoardRepository같은 구체적인 구현체에 의존
     // DIP - DiaryService가 추상화(인터페이스 DiaryRepository)에 의존
     // 효과 - repository에 의존하지만 JpaBoardRepository가 교체되어도 코드를 변경할 필요가 없다
@@ -36,12 +39,19 @@ public class BoardService {
 
     // dto->entity 해서 repository에 저장
     public void save(BoardDTO boardDTO) throws IOException {
+        logger.info("boardDTO = " + boardDTO);
+        logger.info("boardDTO.getBoardFile().isEmpty() = " + boardDTO.getBoardFile().isEmpty());
+
+
         // 파일 첨부 여부에 따라 로직 분리
         if (boardDTO.getBoardFile().isEmpty()) {
+            System.out.println("파일 첨부 없음");
             // 1. 첨부 파일 없음.
             BoardEntity boardEntity = BoardEntity.toSaveEntity(boardDTO); // dto->entity
             boardRepository.save(boardEntity); // repository에 저장
         } else {
+            System.out.println("파일 첨부 있음");
+
             // 2. 첨부 파일 있음.
         /*
             1. DTO에 담긴 파일을 꺼냄
@@ -57,15 +67,13 @@ public class BoardService {
             BoardEntity boardEntity = BoardEntity.toSaveFileEntity(boardDTO); // dto -> entity. db에 저장하기 전이라 id값이 없다.
             Long savedId = boardRepository.save(boardEntity).getId(); // 엔티티를 데이터베이스에 저장하고, 생성된 기본 키 값을 얻음
             BoardEntity board = boardRepository.findById(savedId).get(); // 1에서 저장된 기본 키를 사용하여 엔티티를 다시 조회
+
             for (MultipartFile boardFile: boardDTO.getBoardFile()) {
-                // 원래 이걸로 단일파일 꺼내고 있었는데 반복문으로 하나씩 꺼내서 필요없어짐.
-//                MultipartFile boardFile = boardDTO.getBoardFile(); // 1.
                 String originalFilename = boardFile.getOriginalFilename(); // 2.
                 String storedFileName = System.currentTimeMillis() + "_" + originalFilename; // 3.
                 String savePath = "C:/springboot_img/" + storedFileName; // 4. C:/springboot_img/9802398403948_내사진.jpg
 //            String savePath = "/Users/사용자이름/springboot_img/" + storedFileName; // C:/springboot_img/9802398403948_내사진.jpg
                 boardFile.transferTo(new File(savePath)); // 5.
-
                 BoardFileEntity boardFileEntity = BoardFileEntity.toBoardFileEntity(board, originalFilename, storedFileName);
                 boardFileRepository.save(boardFileEntity);
             }
