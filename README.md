@@ -1,6 +1,7 @@
 # 설명
 본 프로젝트는 코딩레시피님의 "스프링부트 게시판 프로젝트"를 공부한 기록입니다.<br>
 Youtube 주소 : https://www.youtube.com/watch?v=YshcPPHClR4&list=PLV9zd3otBRt7jmXvwCkmvJ8dH5tR_20c0&index=1
+
 Github 주소 : https://github.com/codingrecipe1/board
 
 # 개발환경
