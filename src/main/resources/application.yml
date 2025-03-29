@@ -1,6 +1,6 @@
 # 서버 포트 설정
 server:
-  port: 8082
+  port: 8000
 
 # database 연동 설정
 spring:
@@ -26,5 +26,8 @@ spring:
     database-platform: org.hibernate.dialect.MySQL8Dialect
     open-in-view: false
     show-sql: true # 디버깅용. Hibernate가 실행하는 SQL 쿼리를 콘솔에 출력
+    properties:
+      hibernate:
+        format_sql: true # SQL을 포맷팅
     hibernate:
-      ddl-auto: update #한번 create로 실행하고 난 뒤에는 update
+      ddl-auto: update #테스트
