@@ -4,7 +4,6 @@ import com.example.crud_practice.dto.CommentDTO;
 import com.example.crud_practice.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -19,18 +18,21 @@ import java.util.List;
 @RequestMapping("/comment")
 public class CommentController {
     private final CommentService commentService;
+
+    // 댓글 저장 및 댓글 목록 반환
     @PostMapping("/save")
     public ResponseEntity save(@ModelAttribute CommentDTO commentDTO) {
         System.out.println("commentDTO = " + commentDTO);
+
+        // 1. 댓글 저장 처리
         Long saveResult = commentService.save(commentDTO);
-        if (saveResult != null){
-            // 작성 성공. 새로운 댓글 추가(댓글목록 리턴)
-            //댓글목록은 게시글 아이디의 댓글 전체 불러오기
+        if (saveResult != null) {
+            // 2. 댓글 저장이 성공하면 해당 게시글의 모든 댓글 목록을 반환
             List<CommentDTO> commentDTOList = commentService.findAll(commentDTO.getBoardId());
-            return new ResponseEntity<>(commentDTOList, HttpStatus.OK);
+            return new ResponseEntity<>(commentDTOList, HttpStatus.OK); // 댓글 목록 반환 (200 OK)
         } else {
-            return new ResponseEntity<>("해당 게시글이 존재하지 않습니다.", HttpStatus.NOT_FOUND);
+            // 3. 댓글 저장 실패시, 게시글이 존재하지 않음을 알려줌
+            return new ResponseEntity<>("해당 게시글이 존재하지 않습니다.", HttpStatus.NOT_FOUND); // 게시글 없음 (404 Not Found)
         }
     }
-
 }
