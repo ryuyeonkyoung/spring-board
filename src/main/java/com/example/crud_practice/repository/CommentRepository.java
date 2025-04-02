@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
-    // select * from comment_table where board_id=? order by id desc;
+    // 게시글에 해당하는 모든 댓글을 id 기준 내림차순으로 조회
     List<CommentEntity> findAllByBoardEntityOrderByIdDesc(BoardEntity boardEntity);
 
 }

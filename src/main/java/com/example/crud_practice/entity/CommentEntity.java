@@ -20,7 +20,7 @@ public class CommentEntity extends BaseEntity{
     @Column
     private String commentContents;
 
-    /* Board:Comment = 1:N */
+    // 게시글에 댓글이 여러 개 있을 수 있기 때문에 1:N 관계 설정
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id")
     private BoardEntity boardEntity;

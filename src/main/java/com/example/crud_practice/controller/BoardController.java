@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.List;
 
-// Controller은 HTTP요청을 처리하는 역할을 수행한다.
-// Mapping으로 URL을 매핑하는 것이 HTTP 요청 처리 과정 중 하나이다.
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/board")
@@ -24,15 +22,16 @@ public class BoardController {
     private final BoardService boardService;
     private final CommentService commentService;
 
-    // 페이지요청용
+    // 게시글 작성 폼 출력
     @GetMapping("/save")
     public String saveForm() { return "save"; }
 
-    // 데이터 전송용
-    // boardDTO를 받아서 BoardService로 보내 저장 (거기선 DTO->entity)
+    // 게시글 저장 처리
     @PostMapping("/save")
     public String save(@ModelAttribute BoardDTO boardDTO) throws IOException {
         System.out.println("boardDTO = " + boardDTO);
+
+        // 파일이 없는 경우 빈 리스트로 처리
         if (boardDTO.getBoardFile().get(0).isEmpty())
             boardDTO.getBoardFile().clear();
 
@@ -40,17 +39,7 @@ public class BoardController {
         return "redirect:/board/paging";
     }
 
-//    @GetMapping("/save")
-//    public String saveForm() {
-//        return "save"; // save.html을 반환하여 폼을 사용자에게 보여줍니다.
-//    }
-//    @PostMapping("/save")
-//    public String save(@ModelAttribute BoardDTO boardDTO) throws IOException {
-//        boardService.save(boardDTO); // BoardDTO를 받아서 처리
-//        return "index"; // 저장 후 index.html로 리디렉션
-//    }
-
-
+    // 전체 게시글 목록 조회
     @GetMapping("/")
     public String findAll(Model model) {
         /*
@@ -62,23 +51,23 @@ public class BoardController {
         return "list"; //해당 뷰로 데이터가 전송된다.
     }
 
+    // 게시글 상세 조회 (조회수 증가 + 댓글 포함)
     @GetMapping("/{id}")
     public String findById(@PathVariable Long id, Model model,
                            @PageableDefault(page=1) Pageable pageable) {
-        /*
-            해당 게시글의 조회수를 하나 올리고
-            게시글 데이터를 가져와서 detail.html에 출력
-        */
-        boardService.updateHits(id);
-        BoardDTO boardDTO= boardService.findById(id);
-        /* 댓글 목록 가져오기 */
-        List<CommentDTO> commentDTOList = commentService.findAll(id);
+
+        boardService.updateHits(id); // 조회주 증가
+        BoardDTO boardDTO= boardService.findById(id); // 게시글 데이터 조회
+        List<CommentDTO> commentDTOList = commentService.findAll(id); // 댓글 목록 조회
+
         model.addAttribute("commentList", commentDTOList);
         model.addAttribute("board", boardDTO);
         model.addAttribute("page", pageable.getPageNumber());
+
         return "detail";
     }
 
+    // 게시글 수정 폼 출력
     @GetMapping("/update/{id}")
     public String updateForm(@PathVariable Long id, Model model) {
         BoardDTO boardDTO = boardService.findById(id);
@@ -86,6 +75,7 @@ public class BoardController {
         return "update";
     }
 
+    // 게시글 수정 처리
     @PostMapping("/update")
     public String update(@ModelAttribute BoardDTO boardDTO, Model model) {
         BoardDTO board = boardService.update(boardDTO);
@@ -94,33 +84,27 @@ public class BoardController {
 //        return "redirect:/board/" + boardDTO.getId();
     }
 
+    // 게시글 삭제 처리
     @GetMapping("/delete/{id}")
     public String delete(@PathVariable Long id) {
         boardService.delete(id);
         return "redirect:/board/paging";
     }
 
+    // 게시글 페이징 목록 조회
     // /board/paging?page=1
     @GetMapping("/paging")
     public String paging(@PageableDefault(page = 1) Pageable pageable, Model model) {
-//        pageable.getPageNumber();
         Page<BoardDTO> boardList = boardService.paging(pageable);
-        int blockLimit = 3;
+
+        int blockLimit = 3; // 한번에 보여줄 페이지 수
         int startPage = (((int)(Math.ceil((double)pageable.getPageNumber() / blockLimit))) - 1) * blockLimit + 1; // 1 4 7 10 ~~
         int endPage = ((startPage + blockLimit - 1) < boardList.getTotalPages()) ? startPage + blockLimit - 1 : boardList.getTotalPages(); //limit에 걸리면 보여지는 개수 조절
-
-        // page 갯수 20개
-        // 현재 사용자가 3페이지
-        // 1 2 3
-        // 현재 사용자가 7페이지
-        // 7 8 9
-        // 보여지는 페이지 갯수 3개
-        // 총 페이지 갯수 8개
 
         model.addAttribute("boardList", boardList);
         model.addAttribute("startPage", startPage);
         model.addAttribute("endPage", endPage);
-        return "paging";
 
+        return "paging";
     }
 }
