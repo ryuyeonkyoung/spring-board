@@ -31,18 +31,41 @@ SpringBootTest + TestRestTemplate/MockMvc)
 ### 계층별 예외 처리
 
 **Service 계층**
-- 비즈니스 로직 처리 중 예외 상황이 발생하면 `throw`로 커스텀 예외를 던짐
-- 결과가 없을 수 있는 경우는 `Optional<T>`을 반환하여 유연하게 처리
-- 내부 로직에서는 상황에 따라 `null` 사용도 허용됨
+-> 예외가 발생할 수 있는 I/O나 조회 실패만 예외처리, 단순 저장 로직(save())는 예외 처리를 따로 하지 않아도 된다.
+
+- 비즈니스 로직 실패 시 -> throw new CustomException(...)
+- Optional<T> 반환 메서드 (findById) → 반드시 orElseThrow() 사용
+- 내부 로직에서만 쓸거면 null도 사용 가능
   **Controller 계층**
-- Service에서 발생한 예외는 직접 처리하지 않고 그대로 전파
-- Spring이 `@ExceptionHandler`, `@ControllerAdvice`를 통해 예외를 자동으로 처리하여
-  적절한 HTTP 상태 코드와 메시지를 클라이언트에 반환함
-  -> @RestController를 사용하는 경우, 예외가 발생하면 @ControllerAdvice가 JSON 응답으로 변환
-  (단순 뷰가 아닌 API 응답이라는 점에서 차이 있음)
+- @RestController 환경에서는 예외 발생 시 → @ControllerAdvice가 JSON 에러 응답 자동 처리
+- 뷰 반환이 아닌 API 응답이라면, HTTP 상태 코드 + 에러 메시지 명확히 설정 필요
   **예외 클래스**
-- 실무에서는 대부분 `RuntimeException`을 상속받아 커스텀 예외를 정의함
-- 각 예외는 상황에 맞는 명확한 이름과 예외 메시지를 포함하여 설계함
+- 실무에서는 대부분 `RuntimeException`을 상속받아 커스텀 예외를 정의
+
+### 예외 발생 가능한 주요 JPA 메서드
+
+-> 대부분의 경우 findById()만 신경쓰면 됨.
+
+- **findById()** (단수조회) : Optional<T> 반환 -> orElseThrow() + customException
+- findByUsename() (둘 중 하나) : Optional or List<T> (개발자가 정의) -> 반환 방식에 맞게 예외처리
+- findAll(), findByEmail() (복수조회) : List<T> 반환 -> 빈 리스트도 예외 처리 불필요
+- getById() : 프록시 반환 -> 사용 비권장
+
+### 예외 발생 가능한 주요 MultipartFile 메서드
+
+- transferTo() : void 반환 -> try-catch + IOException,IllegalStateException
+- getBytes() : byte[] 반환 -> try-catch + IOException
+- getInputStream() : InputStream 반환 -> try-catch + IOException
+
+### Custom Exception 사용, 기본 예외 사용 기준
+
+1. Custom Exception
+
+- 비즈니스 로직 관련 예외
+
+2. 기본 예외 (IOException)
+
+- 시스템 예외 : I/O, 네트워크 통신 등
 
 ### 예외 처리 흐름 (REST API 전환 전 기준)
 
@@ -58,12 +81,39 @@ SpringBootTest + TestRestTemplate/MockMvc)
 →
 [에러 뷰 페이지 반환 or 리다이렉트]
 
-### .orElseThrow() 리팩토링
+---
 
-→ Optional을 반환하고 (findById, return) null 반환 시 예외를 throw하려고 할 때 사용
-→ findById().get() 사용한 경우 리펙토링
-BoardEntity board = boardRepository.findById(savedId)
-.orElseThrow(() → new ResourceNotFoundException("게시글 저장 후 조회 실패: id = " + savedId));
+### 로깅 (초보자 수준에서) -
+
+#### SLF4J + Logback
+
+-> 로그 설정은 Logback, 로그 출력은 SLF4J로 구성하는게 실무 표준 조합
+
+- SLF4J (Simple Logging Facade for Java) : 로그 찍는 문법 제공(log.info()). @Slf4j로 Slf4j 인터페이스를 주로 사용
+- Logback : Spring Boot 기본 로그 구현체. logback.xml을 통해 정밀하게 설정 가능 (개인 환경에서는 yml로 간단하게 설정 가능)
+
+#### SLF4J에서 사용 가능한 로깅 레벨 (우선순위 낮은 → 높은)
+
+- TRACE : 가장 상세한 로깅 (로직 흐름의 모든 단계를 보고 싶을 때)
+- DEBUG : 디버깅용 (조건 분기, 반복문 내부 확인 등)
+- INFO : 정상 흐름 요약 (요청, 완료, 저장 등 주요 이벤트)
+- WARN : 서비스는 돌아가지만 경고 상황 (ex. 재시도, 임시 실패)
+- ERROR : 예외 발생 시 무조건 사용 (스택트레이스 포함)
+  -> log.error 찍을 때 e.getMessage() 말고 e 객체 넣어야 함!!!
+
+[로깅 레벨을 정해보자](https://velog.io/@idonymyeon/%ED%8C%80-%EB%A1%9C%EA%B9%85-%EC%A0%84%EB%9E%B5-%EC%84%B8%EC%9A%B0%EA%B8%B0-prnri6hn)
+[옵저버빌리티: 로그라고해서 다 같은 로그가 아니다(1/2)](https://netmarble.engineering/observability-logging-a/)
+[옵저버빌리티: 로그라고해서 다 같은 로그가 아니다(2/2)](https://netmarble.engineering/observability-logging-b/)
+
+#### application.yml 설정
+
+[Common Application Properties](https://docs.spring.io/spring-boot/appendix/application-properties/index.html)
+
+#### 로그를 도입해야 하는 계층
+
+- ExceptionHandler, Service : 필수적으로 적용
+- Controller : 선택적으로 적용
+- Repository : XXX (JPA가 처리함)
 
 ---
 
