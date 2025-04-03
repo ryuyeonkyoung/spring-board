@@ -1,7 +1,6 @@
 package com.example.crud_practice.service;
 
 import com.example.crud_practice.dto.BoardDTO;
-import com.example.crud_practice.entity.BaseEntity;
 import com.example.crud_practice.entity.BoardEntity;
 import com.example.crud_practice.entity.BoardFileEntity;
 import com.example.crud_practice.exception.ResourceNotFoundException;

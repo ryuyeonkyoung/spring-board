@@ -5,7 +5,6 @@ import com.example.crud_practice.dto.UserDTO;
 import com.example.crud_practice.exception.UserSaveException;
 import lombok.RequiredArgsConstructor;
 import com.example.crud_practice.entity.User;
-import com.example.crud_practice.exception.UserSaveException;
 import com.example.crud_practice.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
