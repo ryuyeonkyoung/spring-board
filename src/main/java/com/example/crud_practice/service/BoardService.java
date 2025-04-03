@@ -4,6 +4,7 @@ import com.example.crud_practice.dto.BoardDTO;
 import com.example.crud_practice.entity.BaseEntity;
 import com.example.crud_practice.entity.BoardEntity;
 import com.example.crud_practice.entity.BoardFileEntity;
+import com.example.crud_practice.exception.ResourceNotFoundException;
 import com.example.crud_practice.repository.BoardFileRepository;
 import com.example.crud_practice.repository.BoardRepository;
 import jakarta.transaction.Transactional;
@@ -129,12 +130,11 @@ public class BoardService {
         Optional<BoardEntity> optionalBoardEntity = boardRepository.findById(id);
         if (optionalBoardEntity.isPresent()) {
             BoardEntity boardEntity = optionalBoardEntity.get();
-
-            // 여기서 boardFileEntity도 접근하니까 @Transactional 이노테이션이 필요함.
             BoardDTO boardDTO = BoardDTO.toBoardDTO(boardEntity);
             return boardDTO;
         } else {
-            return null; // TODO: 조회 전용 - null 대신 Optional 반환 예정
+            // 예외처리 : throw + optional (null 가능해서)
+            throw new ResourceNotFoundException("Board not found with id " + id);
         }
     }
 

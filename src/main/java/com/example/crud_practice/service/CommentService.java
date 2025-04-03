@@ -3,6 +3,7 @@ package com.example.crud_practice.service;
 import com.example.crud_practice.dto.CommentDTO;
 import com.example.crud_practice.entity.BoardEntity;
 import com.example.crud_practice.entity.CommentEntity;
+import com.example.crud_practice.exception.CommentSaveException;
 import com.example.crud_practice.repository.BoardRepository;
 import com.example.crud_practice.repository.CommentRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ public class CommentService {
     // 댓글 저장
     public Long save(CommentDTO commentDTO) {
         // 1. 게시글 존재 여부 확인 (게시글이 존재해야 댓글 저장 가능)
-        // Optional을 통해 null 체크를 처리함.
+        // Optional을 보다 안전하게 null을 처리함
         Optional<BoardEntity> optionalBoardEntity = boardRepository.findById(commentDTO.getBoardId());
 
         if(optionalBoardEntity.isPresent()) {
@@ -31,7 +32,8 @@ public class CommentService {
             CommentEntity commentEntity = CommentEntity.toSaveEntity(commentDTO, boardEntity);
             return commentRepository.save(commentEntity).getId(); // 저장된 댓글의 ID 반환
         } else {
-            return null; // TODO: 예외 처리 필요 - Comment 저장은 null 허용 불가
+            // 예외처리 : throw + optional (null 가능해서)
+            throw new CommentSaveException("Comment not found for ID: " + commentDTO.getBoardId());
         }
     }
 
