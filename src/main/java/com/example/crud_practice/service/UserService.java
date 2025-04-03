@@ -20,5 +20,7 @@ public class UserService {
                 .email(dto.getEmail())
                 .password(bCryptPasswordEncoder.encode(dto.getPassword()))
                 .build()).getId();
+
+        // TODO: 예외 처리 필요 - User 저장은 null 허용 불가
     }
 }

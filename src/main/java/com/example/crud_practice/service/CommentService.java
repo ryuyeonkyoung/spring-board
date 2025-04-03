@@ -31,7 +31,7 @@ public class CommentService {
             CommentEntity commentEntity = CommentEntity.toSaveEntity(commentDTO, boardEntity);
             return commentRepository.save(commentEntity).getId(); // 저장된 댓글의 ID 반환
         } else {
-            return null;
+            return null; // TODO: 예외 처리 필요 - Comment 저장은 null 허용 불가
         }
     }
 
