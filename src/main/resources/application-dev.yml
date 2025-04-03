@@ -1,0 +1,15 @@
+# 디버깅이 목적 (SQL로그와 바인딩 값 확인)
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+logging:
+  level:
+    root: info # 개발 단계에서는 debug 레벨로 설정
+    com.example: debug            # 내 서비스 패키지만 디버깅
+    org.hibernate.SQL: debug # SQL 쿼리 로그 레벨
+    org.hibernate.type.descriptor.sql.BasicBinder: trace # SQL 바인딩 로그 레벨
+
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n" # 콘솔 로그 포맷
