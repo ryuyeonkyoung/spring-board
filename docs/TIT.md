@@ -31,7 +31,6 @@ SpringBootTest + TestRestTemplate/MockMvc)
 ### 계층별 예외 처리
 
 **Service 계층**
-
 - 비즈니스 로직 처리 중 예외 상황이 발생하면 `throw`로 커스텀 예외를 던짐
 - 결과가 없을 수 있는 경우는 `Optional<T>`을 반환하여 유연하게 처리
 - 내부 로직에서는 상황에 따라 `null` 사용도 허용됨
@@ -58,6 +57,13 @@ SpringBootTest + TestRestTemplate/MockMvc)
 [Spring이 예외 감지 → @ControllerAdvice or @ExceptionHandler]
 →
 [에러 뷰 페이지 반환 or 리다이렉트]
+
+### .orElseThrow() 리팩토링
+
+→ Optional을 반환하고 (findById, return) null 반환 시 예외를 throw하려고 할 때 사용
+→ findById().get() 사용한 경우 리펙토링
+BoardEntity board = boardRepository.findById(savedId)
+.orElseThrow(() → new ResourceNotFoundException("게시글 저장 후 조회 실패: id = " + savedId));
 
 ---
 

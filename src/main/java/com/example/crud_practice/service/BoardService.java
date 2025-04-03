@@ -87,7 +87,8 @@ public class BoardService {
 
             BoardEntity boardEntity = BoardEntity.toSaveFileEntity(boardDTO);
             Long savedId = boardRepository.save(boardEntity).getId();
-            BoardEntity board = boardRepository.findById(savedId).get();
+            BoardEntity board = boardRepository.findById(savedId)
+                    .orElseThrow(() -> new ResourceNotFoundException("게시글 저장 후 조회 실패: id = " + savedId));
 
             for (MultipartFile boardFile: boardDTO.getBoardFile()) {
                 String originalFilename = boardFile.getOriginalFilename();
@@ -123,18 +124,13 @@ public class BoardService {
      * 게시글 단건 조회
      * - ID 기반으로 게시글 조회 후 DTO로 변환
      * - 파일 정보 포함 시 Lazy 로딩 대응을 위해 트랜잭션 필요
+     * - Optional.orElseThrow()를 사용해 값이 반드시 있어야 한다는 코드의 의도를 드러냄.
      */
     @Transactional
     public BoardDTO findById(Long id) {
-        Optional<BoardEntity> optionalBoardEntity = boardRepository.findById(id);
-        if (optionalBoardEntity.isPresent()) {
-            BoardEntity boardEntity = optionalBoardEntity.get();
-            BoardDTO boardDTO = BoardDTO.toBoardDTO(boardEntity);
-            return boardDTO;
-        } else {
-            // 예외처리 : throw + optional (null 가능해서)
-            throw new ResourceNotFoundException("Board not found with id " + id);
-        }
+        BoardEntity boardEntity = boardRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("게시글 찾을 수 없음: id =" + id)); // 예외처리 : throw + optional (null 가능해서)
+        return BoardDTO.toBoardDTO(boardEntity);
     }
 
     /**

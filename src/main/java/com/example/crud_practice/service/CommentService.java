@@ -33,14 +33,15 @@ public class CommentService {
             return commentRepository.save(commentEntity).getId(); // 저장된 댓글의 ID 반환
         } else {
             // 예외처리 : throw + optional (null 가능해서)
-            throw new CommentSaveException("Comment not found for ID: " + commentDTO.getBoardId());
+            throw new CommentSaveException("댓글 찾을 수 없음: ID = " + commentDTO.getBoardId());
         }
     }
 
     // 특정 게시글의 모든 댓글 조회 (내림차순 정렬)
     public List<CommentDTO> findAll(Long boardId) {
         // 1. 게시글 조회
-        BoardEntity boardEntity = boardRepository.findById(boardId).get();
+        BoardEntity boardEntity = boardRepository.findById(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("전체 게시글 찾을 수 없음: ID = " + boardId));
 
         // 2. 해당 게시글에 속한 댓글을 내림차순으로 조회
         List<CommentEntity> commentEntityList = commentRepository.findAllByBoardEntityOrderByIdDesc(boardEntity);
