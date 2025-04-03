@@ -1,13 +1,14 @@
 package com.example.crud_practice.service;
 
 import com.example.crud_practice.dto.BoardDTO;
-import com.example.crud_practice.entity.BaseEntity;
 import com.example.crud_practice.entity.BoardEntity;
 import com.example.crud_practice.entity.BoardFileEntity;
+import com.example.crud_practice.exception.ResourceNotFoundException;
 import com.example.crud_practice.repository.BoardFileRepository;
 import com.example.crud_practice.repository.BoardRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -42,6 +43,7 @@ import java.util.logging.Logger;
  *
  * 참고: https://tech.kakaopay.com/post/jpa-transactional-bri/
 */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BoardService {
@@ -58,20 +60,13 @@ public class BoardService {
      * - 영속성 컨텍스트 특성상 save 메서드 하나로 insert, update 모두 가능
      */
     public void save(BoardDTO boardDTO) throws IOException {
-        logger.info("boardDTO = " + boardDTO);
-        logger.info("boardDTO.getBoardFile().isEmpty() = " + boardDTO.getBoardFile().isEmpty());
-
         // [Case 1] 첨부파일이 없는 경우 → 본문만 저장
         if (boardDTO.getBoardFile().isEmpty()) {
-            System.out.println("파일 첨부 없음");
-
             BoardEntity boardEntity = BoardEntity.toSaveEntity(boardDTO);
             boardRepository.save(boardEntity);
         }
         // [Case 2] 첨부파일이 있는 경우 → 게시글 + 파일 메타데이터 저장
         else {
-            System.out.println("파일 첨부 있음");
-
             /*
              * 첨부파일 저장 처리 순서:
              * - 자식 엔티티(BoardFile)가 부모(Board)를 참조해야 하므로, 부모를 먼저 저장해 ID 확보 필요
@@ -83,23 +78,42 @@ public class BoardService {
              * 설계 포인트:
              * - 파일명 충돌 방지를 위해 timestamp 기반 파일명 생성
              * - 실제 파일은 로컬 경로에 저장하고, 파일 정보(BoardFileEntity)만 DB에 저장
+             * - 예외 객체를 별도 생성해 log.error로 스택트레이스까지 로깅
              */
 
             BoardEntity boardEntity = BoardEntity.toSaveFileEntity(boardDTO);
-            Long savedId = boardRepository.save(boardEntity).getId();
-            BoardEntity board = boardRepository.findById(savedId).get();
+            Long savedId = boardRepository.save(boardEntity).getId(); // getId()는 save() 직후 조회라 예외 처리 불필요 <-> findById()
+            BoardEntity board = boardRepository.findById(savedId)
+                    .orElseThrow(() -> {
+                        ResourceNotFoundException ex =
+                                new ResourceNotFoundException("게시글 저장 후 조회 실패: id = " + savedId);
+                        log.error("게시글 저장 후 조회 실패: ID = {}", savedId, ex);
+                        return ex;
+                    });
 
             for (MultipartFile boardFile: boardDTO.getBoardFile()) {
-                String originalFilename = boardFile.getOriginalFilename();
-                String storedFileName = System.currentTimeMillis() + "_" + originalFilename;
-                String savePath = "C:/springboot_img/" + storedFileName;
+                try {
+                    String originalFilename = boardFile.getOriginalFilename(); // String을 반환하는 getter 메소드라 예외 필요 없음
+                    String storedFileName = System.currentTimeMillis() + "_" + originalFilename;
+                    String savePath = "C:/springboot_img/" + storedFileName;
 
-                boardFile.transferTo(new File(savePath));
+                    //
+                    try {
+                        boardFile.transferTo(new File(savePath));
+                    } catch (IOException e) {
+                        log.error("파일 저장 실패: {}", e); // e.getMassage() 사용하지 않게 주의! 예외 발생 위치와 원인이 로그에 안찍힘
+                        throw new IOException("파일 저장 실패: " + e);
+                    }
 
-                BoardFileEntity boardFileEntity =
-                        BoardFileEntity.toBoardFileEntity(board, originalFilename, storedFileName);
+                    BoardFileEntity boardFileEntity =
+                            BoardFileEntity.toBoardFileEntity(board, originalFilename, storedFileName);
 
-                boardFileRepository.save(boardFileEntity);
+                    boardFileRepository.save(boardFileEntity);
+                } catch (IOException e) {
+                    log.error("파일 저장 실패: {}", e); // e.getMassage() 사용하지 않게 주의! 예외 발생 위치와 원인이 로그에 안찍힘
+                    throw new IOException("파일 저장 실패: " + e);
+                }
+
             }
         }
     }
@@ -123,19 +137,18 @@ public class BoardService {
      * 게시글 단건 조회
      * - ID 기반으로 게시글 조회 후 DTO로 변환
      * - 파일 정보 포함 시 Lazy 로딩 대응을 위해 트랜잭션 필요
+     * - Optional.orElseThrow()를 사용해 값이 반드시 있어야 한다는 코드의 의도를 드러냄.
      */
     @Transactional
     public BoardDTO findById(Long id) {
-        Optional<BoardEntity> optionalBoardEntity = boardRepository.findById(id);
-        if (optionalBoardEntity.isPresent()) {
-            BoardEntity boardEntity = optionalBoardEntity.get();
-
-            // 여기서 boardFileEntity도 접근하니까 @Transactional 이노테이션이 필요함.
-            BoardDTO boardDTO = BoardDTO.toBoardDTO(boardEntity);
-            return boardDTO;
-        } else {
-            return null;
-        }
+        BoardEntity boardEntity = boardRepository.findById(id)
+                .orElseThrow(() -> {
+                    ResourceNotFoundException ex =
+                            new ResourceNotFoundException("게시글 찾을 수 없음: id = " + id);
+                    log.error("게시글 조회 실패: ID = {}", id, ex);
+                    return ex;
+                }); // 예외처리 : throw + optional (null 가능해서)
+        return BoardDTO.toBoardDTO(boardEntity);
     }
 
     /**
@@ -178,6 +191,7 @@ public class BoardService {
         int page = pageable.getPageNumber() - 1; //0부터 시작
         int pageLimit = 3;
 
+        // findAll은 결과가 없어도 예외가 발생하지 않음 - Optional이 아닌 Page 반환
         Page<BoardEntity> boardEntities =
                 boardRepository.findAll(PageRequest.of(page, pageLimit, Sort.by(Sort.Direction.DESC, "id")));
 
