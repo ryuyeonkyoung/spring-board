@@ -134,7 +134,7 @@ public class BoardService {
             BoardDTO boardDTO = BoardDTO.toBoardDTO(boardEntity);
             return boardDTO;
         } else {
-            return null;
+            return null; // TODO: 조회 전용 - null 대신 Optional 반환 예정
         }
     }
 
