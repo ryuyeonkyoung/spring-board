@@ -1,33 +1,25 @@
-# 서버 포트 설정
 server:
   port: 8000
 
-# database 연동 설정
 spring:
+  profiles:
+    active: prod # prod : 운영, dev : 로컬, test : 테스트, 미지정 : 기본 설정
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/db_yeon?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: root
     password: 1234
+
   thymeleaf:
     cache: false
-#spring:
-#  datasource:
-#    driver-class-name: org.h2.Driver
-#    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false
-#    username: sa
-#    password:
-#  thymeleaf:
-#    cache: false
 
-
-  # spring data jpa 설정
   jpa:
     database-platform: org.hibernate.dialect.MySQL8Dialect
     open-in-view: false
     show-sql: true # 디버깅용. Hibernate가 실행하는 SQL 쿼리를 콘솔에 출력
     properties:
       hibernate:
-        format_sql: true # SQL을 포맷팅
+        format_sql: true # SQL 포맷팅
     hibernate:
-      ddl-auto: update #테스트
+      ddl-auto: update # create/update
