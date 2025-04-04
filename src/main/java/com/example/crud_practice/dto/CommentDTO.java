@@ -1,30 +1,28 @@
 package com.example.crud_practice.dto;
 
 import com.example.crud_practice.entity.CommentEntity;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
+@Builder
+@RequiredArgsConstructor
 @ToString
 public class CommentDTO {
-    private Long id;
-    private String commentWriter;
-    private String commentContents;
-    private Long boardId;
-    private LocalDateTime commentCreatedTime;
+    private final Long id;
+    private final String commentWriter;
+    private final String commentContents;
+    private final Long boardId;
+    private final LocalDateTime commentCreatedTime;
 
     public static CommentDTO toCommentDTO(CommentEntity commentEntity, Long boardId) {
-        CommentDTO commentDTO = new CommentDTO();
-        commentDTO.setId(commentEntity.getId());
-        commentDTO.setCommentWriter(commentEntity.getCommentWriter());
-        commentDTO.setCommentContents(commentEntity.getCommentContents());
-        commentDTO.setCommentCreatedTime(commentEntity.getCreatedTime());
-//        commentDTO.setBoardId(commentEntity.getBoardEntity().getId()); // 매개변수 없이 쓸거면 Service 메서드에 @Transactional 붙이기
-        commentDTO.setBoardId(boardId);
-        return commentDTO;
+        return CommentDTO.builder()
+                .id(commentEntity.getId())
+                .commentWriter(commentEntity.getCommentWriter())
+                .commentContents(commentEntity.getCommentContents())
+                .boardId(boardId)
+                .commentCreatedTime(commentEntity.getCreatedTime())
+                .build();
     }
 }

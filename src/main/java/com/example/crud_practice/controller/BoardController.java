@@ -1,6 +1,7 @@
 package com.example.crud_practice.controller;
 
 import com.example.crud_practice.dto.BoardDTO;
+import com.example.crud_practice.dto.BoardSummaryDTO;
 import com.example.crud_practice.dto.CommentDTO;
 import com.example.crud_practice.service.BoardService;
 import com.example.crud_practice.service.CommentService;
@@ -51,6 +52,7 @@ public class BoardController {
         return "list"; //해당 뷰로 데이터가 전송된다.
     }
 
+    // TODO: comment 조회의 역할 분리 검토하기
     // 게시글 상세 조회 (조회수 증가 + 댓글 포함)
     @GetMapping("/{id}")
     public String findById(@PathVariable Long id, Model model,
@@ -91,11 +93,12 @@ public class BoardController {
         return "redirect:/board/paging";
     }
 
+    // TODO: Cursor 기반 페이징 처리 검토하기
     // 게시글 페이징 목록 조회
     // /board/paging?page=1
     @GetMapping("/paging")
     public String paging(@PageableDefault(page = 1) Pageable pageable, Model model) {
-        Page<BoardDTO> boardList = boardService.paging(pageable);
+        Page<BoardSummaryDTO> boardList = boardService.paging(pageable);
 
         int blockLimit = 3; // 한번에 보여줄 페이지 수
         int startPage = (((int)(Math.ceil((double)pageable.getPageNumber() / blockLimit))) - 1) * blockLimit + 1; // 1 4 7 10 ~~
