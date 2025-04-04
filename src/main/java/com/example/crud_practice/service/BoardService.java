@@ -1,6 +1,7 @@
 package com.example.crud_practice.service;
 
 import com.example.crud_practice.dto.BoardDTO;
+import com.example.crud_practice.dto.BoardSummaryDTO;
 import com.example.crud_practice.entity.BoardEntity;
 import com.example.crud_practice.entity.BoardFileEntity;
 import com.example.crud_practice.exception.ResourceNotFoundException;
@@ -20,8 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-
 import java.util.logging.Logger;
 
 /**
@@ -187,7 +186,7 @@ public class BoardService {
      * - Entity → DTO 변환 후 Page 객체로 반환
      * - 전체 게시글 수, 페이지 수 등 함께 전달 가능
      */
-    public Page<BoardDTO> paging(Pageable pageable) {
+    public Page<BoardSummaryDTO> paging(Pageable pageable) {
         int page = pageable.getPageNumber() - 1; //0부터 시작
         int pageLimit = 3;
 
@@ -195,7 +194,7 @@ public class BoardService {
         Page<BoardEntity> boardEntities =
                 boardRepository.findAll(PageRequest.of(page, pageLimit, Sort.by(Sort.Direction.DESC, "id")));
 
-        Page<BoardDTO> boardDTOS = boardEntities.map(board -> new BoardDTO(board.getId(), board.getBoardWriter(), board.getBoardTitle(), board.getBoardHits(), board.getCreatedTime()));
-        return boardDTOS;
+        Page<BoardSummaryDTO> boardSummaryDTOS = boardEntities.map(board -> new BoardSummaryDTO(board.getId(), board.getBoardWriter(), board.getBoardTitle(), board.getBoardHits(), board.getCreatedTime()));
+        return boardSummaryDTOS;
     }
 }
