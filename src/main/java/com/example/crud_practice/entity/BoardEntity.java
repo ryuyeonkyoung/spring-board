@@ -1,6 +1,6 @@
 package com.example.crud_practice.entity;
 
-import com.example.crud_practice.dto.BoardDTO;
+import com.example.crud_practice.dto.BoardRequestDTO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -44,37 +44,38 @@ public class BoardEntity extends BaseEntity {
     @OneToMany(mappedBy = "boardEntity", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<CommentEntity> commentEntityList = new ArrayList<>();
 
-    // BoardDTO를 BoardEntity로 변환하여 저장하기 위한 메서드
-    public static BoardEntity toSaveEntity(BoardDTO boardDTO) {
+    // Controller에서 Entity를 직접 노출시키지 않기 위한 방법
+    // BoardRequestDTO를 BoardEntity로 변환하여 저장하기 위한 메서드
+    public static BoardEntity toSaveEntity(BoardRequestDTO BoardRequestDTO) {
         BoardEntity boardEntity = new BoardEntity();
-        boardEntity.setBoardWriter(boardDTO.getBoardWriter());
-        boardEntity.setBoardPass(boardDTO.getBoardPass());
-        boardEntity.setBoardTitle(boardDTO.getBoardTitle());
-        boardEntity.setBoardContents(boardDTO.getBoardContents());
+        boardEntity.setBoardWriter(BoardRequestDTO.getBoardWriter());
+        boardEntity.setBoardPass(BoardRequestDTO.getBoardPass());
+        boardEntity.setBoardTitle(BoardRequestDTO.getBoardTitle());
+        boardEntity.setBoardContents(BoardRequestDTO.getBoardContents());
         boardEntity.setBoardHits(0); // 초기 조회수는 0
         boardEntity.setFileAttached(0); // 파일 없음
         return boardEntity;
     }
 
     // 게시글 업데이트용 메서드 (id 포함)
-    public static BoardEntity toUpdateEntity(BoardDTO boardDTO) {
+    public static BoardEntity toUpdateEntity(BoardRequestDTO BoardRequestDTO) {
         BoardEntity boardEntity = new BoardEntity();
-        boardEntity.setId(boardDTO.getId()); // 기존 id 필요
-        boardEntity.setBoardWriter(boardDTO.getBoardWriter());
-        boardEntity.setBoardPass(boardDTO.getBoardPass());
-        boardEntity.setBoardTitle(boardDTO.getBoardTitle());
-        boardEntity.setBoardContents(boardDTO.getBoardContents());
-        boardEntity.setBoardHits(boardDTO.getBoardHits());
+        boardEntity.setId(BoardRequestDTO.getId()); // 기존 id 필요
+        boardEntity.setBoardWriter(BoardRequestDTO.getBoardWriter());
+        boardEntity.setBoardPass(BoardRequestDTO.getBoardPass());
+        boardEntity.setBoardTitle(BoardRequestDTO.getBoardTitle());
+        boardEntity.setBoardContents(BoardRequestDTO.getBoardContents());
+        boardEntity.setBoardHits(BoardRequestDTO.getBoardHits());
         return boardEntity;
     }
 
     // 파일이 있는 게시글 저장용 메서드
-    public static BoardEntity toSaveFileEntity(BoardDTO boardDTO) {
+    public static BoardEntity toSaveFileEntity(BoardRequestDTO BoardRequestDTO) {
         BoardEntity boardEntity = new BoardEntity();
-        boardEntity.setBoardWriter(boardDTO.getBoardWriter());
-        boardEntity.setBoardPass(boardDTO.getBoardPass());
-        boardEntity.setBoardTitle(boardDTO.getBoardTitle());
-        boardEntity.setBoardContents(boardDTO.getBoardContents());
+        boardEntity.setBoardWriter(BoardRequestDTO.getBoardWriter());
+        boardEntity.setBoardPass(BoardRequestDTO.getBoardPass());
+        boardEntity.setBoardTitle(BoardRequestDTO.getBoardTitle());
+        boardEntity.setBoardContents(BoardRequestDTO.getBoardContents());
         boardEntity.setBoardHits(0); // 초기 조회수는 0
         boardEntity.setFileAttached(1); // 파일 있음
         return boardEntity;

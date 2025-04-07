@@ -1,6 +1,6 @@
 package com.example.crud_practice.service;
 
-import com.example.crud_practice.dto.BoardDTO;
+import com.example.crud_practice.dto.BoardRequestDTO;
 import com.example.crud_practice.dto.BoardSummaryDTO;
 import com.example.crud_practice.entity.BoardEntity;
 import com.example.crud_practice.entity.BoardFileEntity;
@@ -44,7 +44,7 @@ import java.util.logging.Logger;
 */
 @Slf4j
 @Service
-@RequiredArgsConstructor
+@RequiredArgsConstructor // 스프링은 생성자가 하나뿐이면 자동으로 의존성을 주입한다.
 public class BoardService {
     private static final Logger logger = Logger.getLogger(BoardService.class.getName());
 
@@ -58,10 +58,10 @@ public class BoardService {
      * - 게시글이 먼저 저장되어야 자식 파일과의 연관관계 설정 가능
      * - 영속성 컨텍스트 특성상 save 메서드 하나로 insert, update 모두 가능
      */
-    public void save(BoardDTO boardDTO) throws IOException {
+    public void save(BoardRequestDTO BoardRequestDTO) throws IOException {
         // [Case 1] 첨부파일이 없는 경우 → 본문만 저장
-        if (boardDTO.getBoardFile().isEmpty()) {
-            BoardEntity boardEntity = BoardEntity.toSaveEntity(boardDTO);
+        if (BoardRequestDTO.getBoardFile().isEmpty()) {
+            BoardEntity boardEntity = BoardEntity.toSaveEntity(BoardRequestDTO);
             boardRepository.save(boardEntity);
         }
         // [Case 2] 첨부파일이 있는 경우 → 게시글 + 파일 메타데이터 저장
@@ -80,7 +80,7 @@ public class BoardService {
              * - 예외 객체를 별도 생성해 log.error로 스택트레이스까지 로깅
              */
 
-            BoardEntity boardEntity = BoardEntity.toSaveFileEntity(boardDTO);
+            BoardEntity boardEntity = BoardEntity.toSaveFileEntity(BoardRequestDTO);
             Long savedId = boardRepository.save(boardEntity).getId(); // getId()는 save() 직후 조회라 예외 처리 불필요 <-> findById()
             BoardEntity board = boardRepository.findById(savedId)
                     .orElseThrow(() -> {
@@ -90,7 +90,7 @@ public class BoardService {
                         return ex;
                     });
 
-            for (MultipartFile boardFile: boardDTO.getBoardFile()) {
+            for (MultipartFile boardFile : BoardRequestDTO.getBoardFile()) {
                 try {
                     String originalFilename = boardFile.getOriginalFilename(); // String을 반환하는 getter 메소드라 예외 필요 없음
                     String storedFileName = System.currentTimeMillis() + "_" + originalFilename;
@@ -123,13 +123,13 @@ public class BoardService {
      * - Controller 계층에는 Entity를 직접 노출하지 않음
      * - Lazy 로딩 대응을 위해 트랜잭션 범위 유지
      */
-    public List<BoardDTO> findAll() {
+    public List<BoardRequestDTO> findAll() {
         List<BoardEntity> boardEntityList = boardRepository.findAll();
-        List<BoardDTO> boardDTOList = new ArrayList<>();
+        List<BoardRequestDTO> BoardRequestDTOList = new ArrayList<>();
         for (BoardEntity boardEntity: boardEntityList) {
-            boardDTOList.add(BoardDTO.toBoardDTO(boardEntity));
+            BoardRequestDTOList.add(BoardRequestDTO.toBoardRequestDTO(boardEntity));
         }
-        return boardDTOList;
+        return BoardRequestDTOList;
     }
 
     /**
@@ -139,7 +139,7 @@ public class BoardService {
      * - Optional.orElseThrow()를 사용해 값이 반드시 있어야 한다는 코드의 의도를 드러냄.
      */
     @Transactional
-    public BoardDTO findById(Long id) {
+    public BoardRequestDTO findById(Long id) {
         BoardEntity boardEntity = boardRepository.findById(id)
                 .orElseThrow(() -> {
                     ResourceNotFoundException ex =
@@ -147,7 +147,7 @@ public class BoardService {
                     log.error("게시글 조회 실패: ID = {}", id, ex);
                     return ex;
                 }); // 예외처리 : throw + optional (null 가능해서)
-        return BoardDTO.toBoardDTO(boardEntity);
+        return BoardRequestDTO.toBoardRequestDTO(boardEntity);
     }
 
     /**
@@ -165,10 +165,10 @@ public class BoardService {
      * - 수정 후 최신 게시글 DTO 반환
      */
     @Transactional
-    public BoardDTO update(BoardDTO boardDTO) {
-        BoardEntity boardEntity = BoardEntity.toUpdateEntity(boardDTO);
+    public BoardRequestDTO update(BoardRequestDTO BoardRequestDTO) {
+        BoardEntity boardEntity = BoardEntity.toUpdateEntity(BoardRequestDTO);
         boardRepository.save(boardEntity);
-        return findById(boardDTO.getId());
+        return findById(BoardRequestDTO.getId());
     }
 
     /**
@@ -194,6 +194,7 @@ public class BoardService {
         Page<BoardEntity> boardEntities =
                 boardRepository.findAll(PageRequest.of(page, pageLimit, Sort.by(Sort.Direction.DESC, "id")));
 
+        // TODO: MapStruct에 대해 알아보기
         Page<BoardSummaryDTO> boardSummaryDTOS = boardEntities.map(board -> new BoardSummaryDTO(board.getId(), board.getBoardWriter(), board.getBoardTitle(), board.getBoardHits(), board.getCreatedTime()));
         return boardSummaryDTOS;
     }

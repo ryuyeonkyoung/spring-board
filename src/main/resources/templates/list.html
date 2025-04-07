@@ -16,7 +16,7 @@
         <th>date</th>
         <th>hits</th>
     </tr>
-<!--    BoardController의 findAll에서 받아옴. boardList는 BoardDTO리스트고 board는 BoardDTO-->
+    <!--    BoardController의 findAll에서 받아옴. boardList는 BoardRequestDTO리스트고 board는 BoardRequestDTO-->
     <tr th:each="board: ${boardList}">
         <td th:text="${board.id}"></td>
         <td><a th:href="@{|/board/${board.id}|}" th:text="${board.boardTitle}"></a></td>
