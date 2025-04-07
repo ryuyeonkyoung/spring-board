@@ -1,6 +1,6 @@
 package com.example.crud_practice.controller;
 
-import com.example.crud_practice.dto.BoardDTO;
+import com.example.crud_practice.dto.BoardRequestDTO;
 import com.example.crud_practice.dto.BoardSummaryDTO;
 import com.example.crud_practice.dto.CommentDTO;
 import com.example.crud_practice.service.BoardService;
@@ -23,20 +23,25 @@ public class BoardController {
     private final BoardService boardService;
     private final CommentService commentService;
 
+
     // 게시글 작성 폼 출력
     @GetMapping("/save")
     public String saveForm() { return "save"; }
 
+    /*
+     * @RequestMapping(value = "/example", method = RequestMethod.GET)과 같음
+     * 스프링 4.3부터 @RequestMapping의 method 속성을 생략할 수 있음
+     */
     // 게시글 저장 처리
     @PostMapping("/save")
-    public String save(@ModelAttribute BoardDTO boardDTO) throws IOException {
-        System.out.println("boardDTO = " + boardDTO);
+    public String save(@ModelAttribute BoardRequestDTO BoardRequestDTO) throws IOException {
+        System.out.println("BoardRequestDTO = " + BoardRequestDTO);
 
         // 파일이 없는 경우 빈 리스트로 처리
-        if (boardDTO.getBoardFile().get(0).isEmpty())
-            boardDTO.getBoardFile().clear();
+        if (BoardRequestDTO.getBoardFile().get(0).isEmpty())
+            BoardRequestDTO.getBoardFile().clear();
 
-        boardService.save(boardDTO);
+        boardService.save(BoardRequestDTO);
         return "redirect:/board/paging";
     }
 
@@ -47,8 +52,8 @@ public class BoardController {
             controller에서는 service의 메소드를 이용한다.
             entity, dto, repository에 실제로 접근할 수 있는건 controller가 아니라 service이다.
          */
-        List<BoardDTO> boardDTOList = boardService.findAll(); //dto 리스트 불러옴
-        model.addAttribute("boardList", boardDTOList); //데이터를 뷰로 전달하기 위해 사용하는 메소드
+        List<BoardRequestDTO> BoardRequestDTOList = boardService.findAll(); //dto 리스트 불러옴
+        model.addAttribute("boardList", BoardRequestDTOList); //데이터를 뷰로 전달하기 위해 사용하는 메소드
         return "list"; //해당 뷰로 데이터가 전송된다.
     }
 
@@ -59,11 +64,11 @@ public class BoardController {
                            @PageableDefault(page=1) Pageable pageable) {
 
         boardService.updateHits(id); // 조회주 증가
-        BoardDTO boardDTO= boardService.findById(id); // 게시글 데이터 조회
+        BoardRequestDTO BoardRequestDTO = boardService.findById(id); // 게시글 데이터 조회
         List<CommentDTO> commentDTOList = commentService.findAll(id); // 댓글 목록 조회
 
         model.addAttribute("commentList", commentDTOList);
-        model.addAttribute("board", boardDTO);
+        model.addAttribute("board", BoardRequestDTO);
         model.addAttribute("page", pageable.getPageNumber());
 
         return "detail";
@@ -72,18 +77,18 @@ public class BoardController {
     // 게시글 수정 폼 출력
     @GetMapping("/update/{id}")
     public String updateForm(@PathVariable Long id, Model model) {
-        BoardDTO boardDTO = boardService.findById(id);
-        model.addAttribute("boardUpdate", boardDTO);
+        BoardRequestDTO BoardRequestDTO = boardService.findById(id);
+        model.addAttribute("boardUpdate", BoardRequestDTO);
         return "update";
     }
 
     // 게시글 수정 처리
     @PostMapping("/update")
-    public String update(@ModelAttribute BoardDTO boardDTO, Model model) {
-        BoardDTO board = boardService.update(boardDTO);
+    public String update(@ModelAttribute BoardRequestDTO BoardRequestDTO, Model model) {
+        BoardRequestDTO board = boardService.update(BoardRequestDTO);
         model.addAttribute("board", board);
         return "detail";
-//        return "redirect:/board/" + boardDTO.getId();
+//        return "redirect:/board/" + BoardRequestDTO.getId();
     }
 
     // 게시글 삭제 처리
@@ -102,7 +107,7 @@ public class BoardController {
 
         int blockLimit = 3; // 한번에 보여줄 페이지 수
         int startPage = (((int)(Math.ceil((double)pageable.getPageNumber() / blockLimit))) - 1) * blockLimit + 1; // 1 4 7 10 ~~
-        int endPage = ((startPage + blockLimit - 1) < boardList.getTotalPages()) ? startPage + blockLimit - 1 : boardList.getTotalPages(); //limit에 걸리면 보여지는 개수 조절
+        int endPage = Math.min((startPage + blockLimit - 1), boardList.getTotalPages()); //limit에 걸리면 보여지는 개수 조절
 
         model.addAttribute("boardList", boardList);
         model.addAttribute("startPage", startPage);
