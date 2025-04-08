@@ -98,6 +98,7 @@ public class BoardController {
         return "redirect:/board/paging";
     }
 
+    // @PageableDefault: 클라이언트가 아무 값도 안줬을 때의 기본값 설정
     // TODO: Cursor 기반 페이징 처리 검토하기
     // 게시글 페이징 목록 조회
     // /board/paging?page=1
@@ -106,7 +107,7 @@ public class BoardController {
         Page<BoardSummaryDTO> boardList = boardService.paging(pageable);
 
         int blockLimit = 3; // 한번에 보여줄 페이지 수
-        int startPage = (((int)(Math.ceil((double)pageable.getPageNumber() / blockLimit))) - 1) * blockLimit + 1; // 1 4 7 10 ~~
+        int startPage = (((int) (Math.ceil((double) pageable.getPageNumber() / blockLimit))) - 1) * blockLimit + 1; // 1 4 7 10 ~~
         int endPage = Math.min((startPage + blockLimit - 1), boardList.getTotalPages()); //limit에 걸리면 보여지는 개수 조절
 
         model.addAttribute("boardList", boardList);

@@ -187,14 +187,27 @@ public class BoardService {
      * - 전체 게시글 수, 페이지 수 등 함께 전달 가능
      */
     public Page<BoardSummaryDTO> paging(Pageable pageable) {
-        int page = pageable.getPageNumber() - 1; //0부터 시작
+        int page = pageable.getPageNumber() - 1; // Spring Data JPA는 페이지 번호를 0부터 시작하므로 보정
         int pageLimit = 3;
 
-        // findAll은 결과가 없어도 예외가 발생하지 않음 - Optional이 아닌 Page 반환
+        /*
+         * 페이징 처리 순서:
+         * - JPARepository의 findAll(Pageable pageable) 메소드를 사용해 Page<BoardEntity> 반환
+         * - Page<BoardEntity>를 DTO로 변환
+         * - Page<BoardSummaryDTO>를 반환
+         *
+         * Pageable vs Page<T>
+         * - Pageable: (요청을 보내는 역할) 페이지 요청 정보(getPageNumber, getPageSize, getSort)만 포함 (페이지 번호, 페이지 크기 등)
+         * - Page<T>: (응답을 받는 역할) 응답 결과(getContent, getTotalElements, getTotalPages) + 요청 정보의 요약본(getNumber, getSize) 포함
+         *
+         * null 처리
+         * - findAll은 결과가 없어도 예외가 발생하지 않음 - Optional이 아닌 Page 반환
+         * */
         Page<BoardEntity> boardEntities =
                 boardRepository.findAll(PageRequest.of(page, pageLimit, Sort.by(Sort.Direction.DESC, "id")));
 
         // TODO: MapStruct에 대해 알아보기
+        // .map(...)메서드를 사용해 Entity → DTO 변환
         Page<BoardSummaryDTO> boardSummaryDTOS = boardEntities.map(board -> new BoardSummaryDTO(board.getId(), board.getBoardWriter(), board.getBoardTitle(), board.getBoardHits(), board.getCreatedTime()));
         return boardSummaryDTOS;
     }
