@@ -11,8 +11,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import static org.springframework.boot.autoconfigure.security.servlet.PathRequest.toH2Console;
-
 @RequiredArgsConstructor
 @Configuration
 public class WebSecurityConfig {
@@ -27,7 +25,18 @@ public class WebSecurityConfig {
                 .requestMatchers("/static/**");
     }
 
-    // Spring Security 6 이상: 람다 스타일 보안 설정
+    // 테스트용 설정 (개발 시 사용)
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .formLogin(form -> form.disable()) // form 로그인 비활성화
+                .httpBasic(httpBasic -> httpBasic.disable()); // 기본 인증도 비활성화
+        return http.build();
+    }
+
+/*    // Spring Security 6 이상: 람다 스타일 보안 설정
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -46,7 +55,7 @@ public class WebSecurityConfig {
                 );
 
         return http.build();
-    }
+    }*/
 
     // 인증 관리자 구성 (사용자 정보 + 비밀번호 인코더 설정)
     @Bean
