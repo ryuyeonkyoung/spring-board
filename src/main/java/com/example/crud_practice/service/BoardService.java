@@ -1,10 +1,11 @@
 package com.example.crud_practice.service;
 
+import com.example.crud_practice.dto.BoardPageResponse;
 import com.example.crud_practice.dto.BoardRequestDTO;
-import com.example.crud_practice.dto.BoardSummaryDTO;
 import com.example.crud_practice.entity.BoardEntity;
 import com.example.crud_practice.entity.BoardFileEntity;
 import com.example.crud_practice.exception.ResourceNotFoundException;
+import com.example.crud_practice.mapper.BoardMapper;
 import com.example.crud_practice.repository.BoardFileRepository;
 import com.example.crud_practice.repository.BoardRepository;
 import jakarta.transaction.Transactional;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * 게시판 도메인의 서비스 계층
@@ -42,6 +44,7 @@ import java.util.logging.Logger;
  *
  * 참고: https://tech.kakaopay.com/post/jpa-transactional-bri/
 */
+// FIXME: 조회 메소드는 @Transactional(readOnly = true)로 변경
 @Slf4j
 @Service
 @RequiredArgsConstructor // 스프링은 생성자가 하나뿐이면 자동으로 의존성을 주입한다.
@@ -59,60 +62,56 @@ public class BoardService {
      * - 영속성 컨텍스트 특성상 save 메서드 하나로 insert, update 모두 가능
      */
     public void save(BoardRequestDTO BoardRequestDTO) throws IOException {
-        // [Case 1] 첨부파일이 없는 경우 → 본문만 저장
+        // Case 1: 첨부파일이 없는 경우 → 게시글만 저장
         if (BoardRequestDTO.getBoardFile().isEmpty()) {
             BoardEntity boardEntity = BoardEntity.toSaveEntity(BoardRequestDTO);
             boardRepository.save(boardEntity);
         }
-        // [Case 2] 첨부파일이 있는 경우 → 게시글 + 파일 메타데이터 저장
-        else {
-            /*
-             * 첨부파일 저장 처리 순서:
-             * - 자식 엔티티(BoardFile)가 부모(Board)를 참조해야 하므로, 부모를 먼저 저장해 ID 확보 필요
-             *
-             * 1. (부모) 게시글 저장 → ID 생성
-             * 2. (조회) ID를 기반으로 게시글 다시 조회 → 영속성 컨텍스트에서 관리됨
-             * 3. (자식) 각 파일 저장 → 게시글 ID를 외래키로 연결해서 저장
-             *
-             * 설계 포인트:
-             * - 파일명 충돌 방지를 위해 timestamp 기반 파일명 생성
-             * - 실제 파일은 로컬 경로에 저장하고, 파일 정보(BoardFileEntity)만 DB에 저장
-             * - 예외 객체를 별도 생성해 log.error로 스택트레이스까지 로깅
-             */
 
-            BoardEntity boardEntity = BoardEntity.toSaveFileEntity(BoardRequestDTO);
-            Long savedId = boardRepository.save(boardEntity).getId(); // getId()는 save() 직후 조회라 예외 처리 불필요 <-> findById()
-            BoardEntity board = boardRepository.findById(savedId)
-                    .orElseThrow(() -> {
-                        ResourceNotFoundException ex =
-                                new ResourceNotFoundException("게시글 저장 후 조회 실패: id = " + savedId);
-                        log.error("게시글 저장 후 조회 실패: ID = {}", savedId, ex);
-                        return ex;
-                    });
+        /*
+         * 첨부파일 저장 처리 순서:
+         * - 자식 엔티티(BoardFile)가 부모(Board)를 참조해야 하므로, 부모를 먼저 저장해 ID 확보 필요
+         *
+         * 1. (부모) 게시글 저장 → ID 생성
+         * 2. (조회) ID를 기반으로 게시글 다시 조회 → 영속성 컨텍스트에서 관리됨
+         * 3. (자식) 각 파일 저장 → 게시글 ID를 외래키로 연결해서 저장
+         *
+         * 설계 포인트:
+         * - 파일명 충돌 방지를 위해 timestamp 기반 파일명 생성
+         * - 실제 파일은 로컬 경로에 저장하고, 파일 정보(BoardFileEntity)만 DB에 저장
+         * - 예외 객체를 별도 생성해 log.error로 스택트레이스까지 로깅
+         */
 
-            for (MultipartFile boardFile : BoardRequestDTO.getBoardFile()) {
-                try {
-                    String originalFilename = boardFile.getOriginalFilename(); // String을 반환하는 getter 메소드라 예외 필요 없음
-                    String storedFileName = System.currentTimeMillis() + "_" + originalFilename;
-                    String savePath = "C:/springboot_img/" + storedFileName;
+        // Case 2: 첨부파일이 있는 경우 → 게시글 + 파일 정보 저장
+        BoardEntity boardEntity = BoardEntity.toSaveFileEntity(BoardRequestDTO);
+        Long savedId = boardRepository.save(boardEntity).getId(); // getId()는 save() 직후 조회라 예외 처리 불필요 <-> findById()
 
-                    //
-                    try {
-                        boardFile.transferTo(new File(savePath));
-                    } catch (IOException e) {
-                        log.error("파일 저장 실패: {}", e); // e.getMassage() 사용하지 않게 주의! 예외 발생 위치와 원인이 로그에 안찍힘
-                        throw new IOException("파일 저장 실패: " + e);
-                    }
+        BoardEntity board = boardRepository.findById(savedId)
+                .orElseThrow(() -> {
+                    ResourceNotFoundException ex =
+                            new ResourceNotFoundException("게시글 저장 후 조회 실패: id = " + savedId);
+                    log.error("게시글 저장 후 조회 실패: ID = {}", savedId, ex);
+                    return ex;
+                });
 
-                    BoardFileEntity boardFileEntity =
-                            BoardFileEntity.toBoardFileEntity(board, originalFilename, storedFileName);
+        // 첨부파일 저장
+        for (MultipartFile boardFile : BoardRequestDTO.getBoardFile()) {
+            // catch문에서 log.error에 기록하기 위해 try문 밖에 필드 분리
+            String originalFilename = boardFile.getOriginalFilename();
+            String storedFileName = System.currentTimeMillis() + "_" + originalFilename;
+            String savePath = "C:/springboot_img/" + storedFileName;
 
-                    boardFileRepository.save(boardFileEntity);
-                } catch (IOException e) {
-                    log.error("파일 저장 실패: {}", e); // e.getMassage() 사용하지 않게 주의! 예외 발생 위치와 원인이 로그에 안찍힘
-                    throw new IOException("파일 저장 실패: " + e);
-                }
+            try {
+                // 실제 파일 저장
+                boardFile.transferTo(new File(savePath));
 
+                // DB에 파일 메타데이터 저장
+                BoardFileEntity boardFileEntity = BoardFileEntity.toBoardFileEntity(board, originalFilename, storedFileName);
+                boardFileRepository.save(boardFileEntity);
+
+            } catch (IOException e) {
+                log.error("파일 저장 실패 - 파일명: {}, 경로: {}", originalFilename, savePath, e); // e.getMassage() 사용하지 않게 주의! 예외 발생 위치와 원인이 로그에 안찍힘
+                throw new IOException("파일 저장 실패: " + originalFilename, e);
             }
         }
     }
@@ -181,34 +180,41 @@ public class BoardService {
     }
 
     /**
-     * 게시글 목록 페이징 처리
+     * 게시글 목록 페이징 처리 (Offset 기반)
      * - PageRequest 기반으로 요청 페이지 추출
      * - Entity → DTO 변환 후 Page 객체로 반환
      * - 전체 게시글 수, 페이지 수 등 함께 전달 가능
-     */
-    public Page<BoardSummaryDTO> paging(Pageable pageable) {
-        int page = pageable.getPageNumber() - 1; // Spring Data JPA는 페이지 번호를 0부터 시작하므로 보정
+     * 페이징 처리 순서:
+     * 1. JPARepository의 findAll(Pageable pageable) 메소드를 사용해 Page<BoardEntity> 반환
+     * 2. Page<BoardEntity>를 DTO로 변환
+     * 3. Page<BoardPageResponse>를 반환
+     * */
+    public Page<BoardPageResponse> getBoardsByPage(Pageable pageable) {
+        int page = Math.max(pageable.getPageNumber() - 1, 0); // Spring Data JPA는 페이지 번호를 0부터 시작하므로 보정
         int pageLimit = 3;
 
-        /*
-         * 페이징 처리 순서:
-         * - JPARepository의 findAll(Pageable pageable) 메소드를 사용해 Page<BoardEntity> 반환
-         * - Page<BoardEntity>를 DTO로 변환
-         * - Page<BoardSummaryDTO>를 반환
-         *
-         * Pageable vs Page<T>
-         * - Pageable: (요청을 보내는 역할) 페이지 요청 정보(getPageNumber, getPageSize, getSort)만 포함 (페이지 번호, 페이지 크기 등)
-         * - Page<T>: (응답을 받는 역할) 응답 결과(getContent, getTotalElements, getTotalPages) + 요청 정보의 요약본(getNumber, getSize) 포함
-         *
-         * null 처리
-         * - findAll은 결과가 없어도 예외가 발생하지 않음 - Optional이 아닌 Page 반환
-         * */
+        // findAll은 null이여도 예외가 발생하지 않음 - Optional이 아닌 Page 반환
         Page<BoardEntity> boardEntities =
                 boardRepository.findAll(PageRequest.of(page, pageLimit, Sort.by(Sort.Direction.DESC, "id")));
 
-        // TODO: MapStruct에 대해 알아보기
-        // .map(...)메서드를 사용해 Entity → DTO 변환
-        Page<BoardSummaryDTO> boardSummaryDTOS = boardEntities.map(board -> new BoardSummaryDTO(board.getId(), board.getBoardWriter(), board.getBoardTitle(), board.getBoardHits(), board.getCreatedTime()));
-        return boardSummaryDTOS;
+        return boardEntities.map(BoardMapper::toOffsetPageDTO);
+    }
+
+    /*
+     * 페이징 처리 순서:
+     * 1. JPARepository의 findByCursor(Long cursor, Pageable pageable) 메소드를 사용해 List<BoardEntity> 반환
+     * 2. List<BoardEntity>를 DTO로 변환
+     * 3. List<BoardPageResponse>를 반환
+     * */
+    @Transactional
+    public List<BoardPageResponse> getBoardsByCursor(Long cursor, Pageable pageable) {
+        if (cursor == null) {
+            cursor = Long.MAX_VALUE; // 최초 조회 시 가장 최신 글부터 (Offset으로 대체 예정)
+        }
+
+        List<BoardEntity> boardEntities = boardRepository.findByCursor(cursor, pageable);
+        return boardEntities.stream()
+                .map(BoardMapper::toCursorPageDTO)
+                .collect(Collectors.toList());
     }
 }
