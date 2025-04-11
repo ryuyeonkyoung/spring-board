@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -66,52 +67,71 @@ public class BoardService {
         if (BoardRequestDTO.getBoardFile().isEmpty()) {
             BoardEntity boardEntity = BoardEntity.toSaveEntity(BoardRequestDTO);
             boardRepository.save(boardEntity);
-        }
+        } else {
+            /*
+             * 첨부파일 저장 처리 순서:
+             * - 자식 엔티티(BoardFile)가 부모(Board)를 참조해야 하므로, 부모를 먼저 저장해 ID 확보 필요
+             *
+             * 1. (부모) 게시글 저장 → ID 생성
+             * 2. (조회) ID를 기반으로 게시글 다시 조회 → 영속성 컨텍스트에서 관리됨
+             * 3. (자식) 각 파일 저장 → 게시글 ID를 외래키로 연결해서 저장
+             *
+             * 설계 포인트:
+             * - 파일명 충돌 방지를 위해 timestamp 기반 파일명 생성
+             * - 실제 파일은 로컬 경로에 저장하고, 파일 정보(BoardFileEntity)만 DB에 저장
+             * - 예외 객체를 별도 생성해 log.error로 스택트레이스까지 로깅
+             */
 
-        /*
-         * 첨부파일 저장 처리 순서:
-         * - 자식 엔티티(BoardFile)가 부모(Board)를 참조해야 하므로, 부모를 먼저 저장해 ID 확보 필요
-         *
-         * 1. (부모) 게시글 저장 → ID 생성
-         * 2. (조회) ID를 기반으로 게시글 다시 조회 → 영속성 컨텍스트에서 관리됨
-         * 3. (자식) 각 파일 저장 → 게시글 ID를 외래키로 연결해서 저장
-         *
-         * 설계 포인트:
-         * - 파일명 충돌 방지를 위해 timestamp 기반 파일명 생성
-         * - 실제 파일은 로컬 경로에 저장하고, 파일 정보(BoardFileEntity)만 DB에 저장
-         * - 예외 객체를 별도 생성해 log.error로 스택트레이스까지 로깅
-         */
+            // Case 2: 첨부파일이 있는 경우 → 게시글 + 파일 정보 저장
+            BoardEntity boardEntity = BoardEntity.toSaveFileEntity(BoardRequestDTO);
+            Long savedId = boardRepository.save(boardEntity).getId(); // getId()는 save() 직후 조회라 예외 처리 불필요 <-> findById()
 
-        // Case 2: 첨부파일이 있는 경우 → 게시글 + 파일 정보 저장
-        BoardEntity boardEntity = BoardEntity.toSaveFileEntity(BoardRequestDTO);
-        Long savedId = boardRepository.save(boardEntity).getId(); // getId()는 save() 직후 조회라 예외 처리 불필요 <-> findById()
+            BoardEntity board = boardRepository.findById(savedId)
+                    .orElseThrow(() -> {
+                        ResourceNotFoundException ex =
+                                new ResourceNotFoundException("게시글 저장 후 조회 실패: id = " + savedId);
+                        log.error("게시글 저장 후 조회 실패: ID = {}", savedId, ex);
+                        return ex;
+                    });
 
-        BoardEntity board = boardRepository.findById(savedId)
-                .orElseThrow(() -> {
-                    ResourceNotFoundException ex =
-                            new ResourceNotFoundException("게시글 저장 후 조회 실패: id = " + savedId);
-                    log.error("게시글 저장 후 조회 실패: ID = {}", savedId, ex);
-                    return ex;
-                });
+            // 첨부파일 저장
+            // 1. 현재 프로젝트의 루트 디렉토리 구하기
+            String projectRoot = System.getProperty("C:/dev/IntelliJ/spring-realworld-board");
 
-        // 첨부파일 저장
-        for (MultipartFile boardFile : BoardRequestDTO.getBoardFile()) {
-            // catch문에서 log.error에 기록하기 위해 try문 밖에 필드 분리
-            String originalFilename = boardFile.getOriginalFilename();
-            String storedFileName = System.currentTimeMillis() + "_" + originalFilename;
-            String savePath = "C:/springboot_img/" + storedFileName;
+            // 2. 프로젝트 루트 안에 uploads 폴더 만들기
+            File uploadDir = new File(projectRoot, "uploads"); // => C:/.../spring-realworld-board/uploads
+            if (!uploadDir.exists()) {
+                boolean created = uploadDir.mkdirs();
+                if (created) {
+                    log.info("📁 uploads 디렉토리 생성 성공: {}", uploadDir.getAbsolutePath());
+                } else {
+                    log.error("❌ uploads 디렉토리 생성 실패: {}", uploadDir.getAbsolutePath());
+                }
+            }
 
-            try {
-                // 실제 파일 저장
-                boardFile.transferTo(new File(savePath));
+            for (MultipartFile boardFile : BoardRequestDTO.getBoardFile()) {
+                // 3. 저장할 파일 이름 생성
+                // catch문에서 log.error에 기록하기 위해 try문 밖에 필드 분리
+                String originalFilename = boardFile.getOriginalFilename();
+                if (originalFilename == null || originalFilename.isBlank()) {
+                    throw new IllegalArgumentException("파일 이름이 유효하지 않습니다");
+                }
 
-                // DB에 파일 메타데이터 저장
-                BoardFileEntity boardFileEntity = BoardFileEntity.toBoardFileEntity(board, originalFilename, storedFileName);
-                boardFileRepository.save(boardFileEntity);
+                String storedFileName = UUID.randomUUID() + "_" + originalFilename; // UUID로 파일명 중복 방지 (timestamp는 동시에 여러 파일 저장되면 중복 가능성 있음)
+                String savePath = uploadDir.getAbsolutePath() + File.separator + storedFileName;
 
-            } catch (IOException e) {
-                log.error("파일 저장 실패 - 파일명: {}, 경로: {}", originalFilename, savePath, e); // e.getMassage() 사용하지 않게 주의! 예외 발생 위치와 원인이 로그에 안찍힘
-                throw new IOException("파일 저장 실패: " + originalFilename, e);
+                try {
+                    // 4. 실제 파일 저장
+                    boardFile.transferTo(new File(savePath));
+
+                    // DB에 파일 메타데이터 저장
+                    BoardFileEntity boardFileEntity = BoardFileEntity.toBoardFileEntity(board, originalFilename, storedFileName);
+                    boardFileRepository.save(boardFileEntity);
+
+                } catch (IOException e) {
+                    log.error("파일 저장 실패 - 파일명: {}, 경로: {}", originalFilename, savePath, e); // e.getMassage() 사용하지 않게 주의! 예외 발생 위치와 원인이 로그에 안찍힘
+                    throw new IOException("파일 저장 실패: " + originalFilename, e);
+                }
             }
         }
     }
