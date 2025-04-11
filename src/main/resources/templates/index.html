@@ -8,7 +8,8 @@
     <button onclick="saveReq()">글작성</button>
     <a href="/board/save">글작성(링크)</a>
     <button onclick="listReq()">글목록</button>
-    <button onclick="pagingReq()">페이징목록</button>
+    <button onclick="offsetPagingReq()">Offset-페이징목록</button>
+    <button onclick="cursorPagingReq()">Cursor-페이징목록</button>
 </body>
 <script>
     //  function saveReq() {
@@ -21,8 +22,11 @@
     const listReq = () => {
         location.href = "/board/";
     }
-    const pagingReq = () => {
+    const offsetPagingReq = () => {
         location.href = "/board/paging";
+    }
+    const cursorPagingReq = () => {
+        location.href = "/board/cursor-paging";
     }
 
 </script>

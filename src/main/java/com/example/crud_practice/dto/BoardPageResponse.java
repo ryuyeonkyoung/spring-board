@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
  */
 @Getter
 @RequiredArgsConstructor
-public class BoardSummaryDTO {
+public class BoardPageResponse {
     private final Long id;
     private final String boardWriter;
     private final String boardTitle;
