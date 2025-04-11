@@ -2,16 +2,20 @@ package com.example.crud_practice.config;
 
 import com.example.crud_practice.service.UserDetailService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+@Slf4j
 @RequiredArgsConstructor
+@EnableWebSecurity // Spring Security 수동 설정 시, 안정적인 적용을 위해 @EnableWebSecurity를 넣어야 함
 @Configuration
 public class WebSecurityConfig {
 
@@ -28,6 +32,7 @@ public class WebSecurityConfig {
     // 테스트용 설정 (개발 시 사용)
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        log.info(">>> SecurityFilterChain 설정 진입 : 로그인 없는 테스트용 설정");
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
@@ -39,6 +44,7 @@ public class WebSecurityConfig {
 /*    // Spring Security 6 이상: 람다 스타일 보안 설정
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        log.info(">>> SecurityFilterChain 설정 진입 : 로그인 있는 실제 운영용 설정");
         http
                 .csrf(csrf -> csrf.disable()) // CSRF 보호 비활성화 (API 서버일 경우 필요)
                 .authorizeHttpRequests(auth -> auth

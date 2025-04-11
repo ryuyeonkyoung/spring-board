@@ -3,7 +3,7 @@ server:
 
 spring:
   profiles:
-    active: prod # prod : 운영, dev : 로컬, test : 테스트, 미지정 : 기본 설정
+    active: dev # prod : 운영, dev : 로컬, test : 테스트, 미지정 : 기본 설정
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
