@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Cursor Paging</title>
+</head>
+<body>
+<h2>Cursor Paging 게시판</h2>
+
+<button onclick="saveReq()">글작성</button>
+
+<table>
+    <tr>
+        <th>id</th>
+        <th>title</th>
+        <th>writer</th>
+        <th>date</th>
+        <th>hits</th>
+    </tr>
+    <tr th:each="board : ${boardList}">
+        <td th:text="${board.id}"></td>
+        <td><a th:href="@{|/board/${board.id}|}" th:text="${board.boardTitle}"></a></td>
+        <td th:text="${board.boardWriter}"></td>
+        <td th:text="*{#temporals.format(board.boardCreatedTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
+        <td th:text="${board.boardHits}"></td>
+    </tr>
+</table>
+
+<!-- 다음 페이지 버튼 -->
+<!-- nextCursor가 있을 경우만 버튼 표시 -->
+<div th:if="${hasNext}">
+    <a th:href="@{/board/cursor-paging(cursor=${nextCursor})}">더 보기</a>
+</div>
+<!-- nextCursor가 없으면 마지막 페이지 -->
+<div th:unless="${hasNext}">
+    <p>마지막 페이지입니다.</p>
+</div>
+
+</body>
+
+<script>
+    const saveReq = () => {
+        location.href = "/board/save";
+    }
+</script>
+
+</html>
