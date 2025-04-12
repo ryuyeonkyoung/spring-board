@@ -1,6 +1,6 @@
 package com.example.crud_practice.service;
 
-import com.example.crud_practice.dto.BoardPageResponse;
+import com.example.crud_practice.dto.BoardPageResponseDTO;
 import com.example.crud_practice.dto.BoardRequestDTO;
 import com.example.crud_practice.entity.BoardEntity;
 import com.example.crud_practice.entity.BoardFileEntity;
@@ -207,9 +207,9 @@ public class BoardService {
      * 페이징 처리 순서:
      * 1. JPARepository의 findAll(Pageable pageable) 메소드를 사용해 Page<BoardEntity> 반환
      * 2. Page<BoardEntity>를 DTO로 변환
-     * 3. Page<BoardPageResponse>를 반환
+     * 3. Page<BoardPageResponseDTO>를 반환
      * */
-    public Page<BoardPageResponse> getBoardsByPage(Pageable pageable) {
+    public Page<BoardPageResponseDTO> getBoardsByPage(Pageable pageable) {
         int page = Math.max(pageable.getPageNumber() - 1, 0); // Spring Data JPA는 페이지 번호를 0부터 시작하므로 보정
         int pageLimit = 3;
 
@@ -224,10 +224,10 @@ public class BoardService {
      * 페이징 처리 순서:
      * 1. JPARepository의 findByCursor(Long cursor, Pageable pageable) 메소드를 사용해 List<BoardEntity> 반환
      * 2. List<BoardEntity>를 DTO로 변환
-     * 3. List<BoardPageResponse>를 반환
+     * 3. List<BoardPageResponseDTO>를 반환
      * */
     @Transactional
-    public List<BoardPageResponse> getBoardsByCursor(Long cursor, Pageable pageable) {
+    public List<BoardPageResponseDTO> getBoardsByCursor(Long cursor, Pageable pageable) {
         if (cursor == null) {
             cursor = Long.MAX_VALUE; // 최초 조회 시 가장 최신 글부터 (Offset으로 대체 예정)
         }

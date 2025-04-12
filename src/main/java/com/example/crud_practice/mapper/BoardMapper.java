@@ -1,6 +1,6 @@
 package com.example.crud_practice.mapper;
 
-import com.example.crud_practice.dto.BoardPageResponse;
+import com.example.crud_practice.dto.BoardPageResponseDTO;
 import com.example.crud_practice.dto.BoardRequestDTO;
 import com.example.crud_practice.entity.BoardEntity;
 import com.example.crud_practice.entity.BoardFileEntity;
@@ -55,9 +55,9 @@ public class BoardMapper {
         return BoardRequestDTO;
     }
 
-    public static BoardPageResponse toOffsetPageDTO(BoardEntity board) {
+    public static BoardPageResponseDTO toOffsetPageDTO(BoardEntity board) {
         try {
-            return new BoardPageResponse(
+            return new BoardPageResponseDTO(
                     board.getId(),
                     board.getBoardWriter(),
                     board.getBoardTitle(),
@@ -65,14 +65,14 @@ public class BoardMapper {
                     board.getCreatedTime()
             );
         } catch (Exception e) {
-            log.error("BoardPageResponse 매핑 실패: boardEntity = {}", board, e);
+            log.error("BoardPageResponseDTO 매핑 실패: boardEntity = {}", board, e);
             throw e;
         }
     }
 
-    public static BoardPageResponse toCursorPageDTO(BoardEntity board) {
+    public static BoardPageResponseDTO toCursorPageDTO(BoardEntity board) {
         try {
-            return new BoardPageResponse(
+            return new BoardPageResponseDTO(
                     board.getId(),
                     board.getBoardWriter(),
                     board.getBoardTitle(),
@@ -80,7 +80,7 @@ public class BoardMapper {
                     board.getCreatedTime()
             );
         } catch (Exception e) {
-            log.error("BoardPageResponse 매핑 실패: boardEntity = {}", board, e);
+            log.error("BoardPageResponseDTO 매핑 실패: boardEntity = {}", board, e);
             throw e;
         }
     }
