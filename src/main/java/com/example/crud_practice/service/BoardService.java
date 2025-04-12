@@ -146,7 +146,7 @@ public class BoardService {
         List<BoardEntity> boardEntityList = boardRepository.findAll();
         List<BoardRequestDTO> BoardRequestDTOList = new ArrayList<>();
         for (BoardEntity boardEntity: boardEntityList) {
-            BoardRequestDTOList.add(BoardRequestDTO.toBoardRequestDTO(boardEntity));
+            BoardRequestDTOList.add(BoardMapper.toBoardRequestDTO(boardEntity));
         }
         return BoardRequestDTOList;
     }
@@ -166,7 +166,7 @@ public class BoardService {
                     log.error("게시글 조회 실패: ID = {}", id, ex);
                     return ex;
                 }); // 예외처리 : throw + optional (null 가능해서)
-        return BoardRequestDTO.toBoardRequestDTO(boardEntity);
+        return BoardMapper.toBoardRequestDTO(boardEntity);
     }
 
     /**
