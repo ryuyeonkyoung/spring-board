@@ -4,6 +4,7 @@ import com.example.crud_practice.dto.CommentDTO;
 import com.example.crud_practice.entity.BoardEntity;
 import com.example.crud_practice.entity.CommentEntity;
 import com.example.crud_practice.exception.CommentSaveException;
+import com.example.crud_practice.mapper.CommentMapper;
 import com.example.crud_practice.repository.BoardRepository;
 import com.example.crud_practice.repository.CommentRepository;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +56,7 @@ public class CommentService {
         // 3. Entity → DTO 변환
         List<CommentDTO> commentDTOList = new ArrayList<>();
         for (CommentEntity commentEntity : commentEntityList) {
-            CommentDTO commentDTO = CommentDTO.toCommentDTO(commentEntity, boardId);
+            CommentDTO commentDTO = CommentMapper.toCommentDTO(commentEntity, boardId);
             commentDTOList.add(commentDTO);
         }
 
