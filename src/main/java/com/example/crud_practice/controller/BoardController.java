@@ -1,6 +1,6 @@
 package com.example.crud_practice.controller;
 
-import com.example.crud_practice.dto.BoardPageResponse;
+import com.example.crud_practice.dto.BoardPageResponseDTO;
 import com.example.crud_practice.dto.BoardRequestDTO;
 import com.example.crud_practice.dto.CommentDTO;
 import com.example.crud_practice.service.BoardService;
@@ -102,7 +102,7 @@ public class BoardController {
     // /board/paging?page=1
     @GetMapping("/paging")
     public String paging(@PageableDefault(page = 1) Pageable pageable, Model model) {
-        Page<BoardPageResponse> boardList = boardService.getBoardsByPage(pageable);
+        Page<BoardPageResponseDTO> boardList = boardService.getBoardsByPage(pageable);
 
         int blockLimit = pageable.getPageSize(); // 한 블록에 보여줄 페이지 수
         int startPage = (((int) (Math.ceil((double) pageable.getPageNumber() / blockLimit))) - 1) * blockLimit + 1; // 1 4 7 10 ~~
@@ -123,7 +123,7 @@ public class BoardController {
             @PageableDefault(size = 3) Pageable pageable,
             Model model
     ) {
-        List<BoardPageResponse> boardList = boardService.getBoardsByCursor(cursor, pageable);
+        List<BoardPageResponseDTO> boardList = boardService.getBoardsByCursor(cursor, pageable);
 
         Long nextCursor = boardList.isEmpty() ? null : boardList.get(boardList.size() - 1).getId();
         boolean hasNext = boardList.size() == pageable.getPageSize();
