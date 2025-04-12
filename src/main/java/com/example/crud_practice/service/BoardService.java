@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -55,6 +54,7 @@ public class BoardService {
     // DIP 적용: 인터페이스에만 의존하고, 구현체는 Spring이 주입(DI)
     private final BoardRepository boardRepository;
     private final BoardFileRepository boardFileRepository;
+    private final LocalFileStorageService localFileStorageService;
 
     /**
      * 게시글 저장 처리
@@ -110,27 +110,17 @@ public class BoardService {
             }
 
             for (MultipartFile boardFile : BoardRequestDTO.getBoardFile()) {
-                // 3. 저장할 파일 이름 생성
-                // catch문에서 log.error에 기록하기 위해 try문 밖에 필드 분리
-                String originalFilename = boardFile.getOriginalFilename();
-                if (originalFilename == null || originalFilename.isBlank()) {
-                    throw new IllegalArgumentException("파일 이름이 유효하지 않습니다");
-                }
-
-                String storedFileName = UUID.randomUUID() + "_" + originalFilename; // UUID로 파일명 중복 방지 (timestamp는 동시에 여러 파일 저장되면 중복 가능성 있음)
-                String savePath = uploadDir.getAbsolutePath() + File.separator + storedFileName;
-
                 try {
-                    // 4. 실제 파일 저장
-                    boardFile.transferTo(new File(savePath));
+                    // 파일 저장 처리
+                    String storedFileName = localFileStorageService.storeFile(boardFile, uploadDir.getAbsolutePath());
 
                     // DB에 파일 메타데이터 저장
-                    BoardFileEntity boardFileEntity = BoardFileEntity.toBoardFileEntity(board, originalFilename, storedFileName);
+                    BoardFileEntity boardFileEntity = BoardFileEntity.toBoardFileEntity(board, boardFile.getOriginalFilename(), storedFileName);
                     boardFileRepository.save(boardFileEntity);
 
                 } catch (IOException e) {
-                    log.error("파일 저장 실패 - 파일명: {}, 경로: {}", originalFilename, savePath, e); // e.getMassage() 사용하지 않게 주의! 예외 발생 위치와 원인이 로그에 안찍힘
-                    throw new IOException("파일 저장 실패: " + originalFilename, e);
+                    log.error("파일 저장 실패 - 파일명: {}, 경로: {}", boardFile.getOriginalFilename(), uploadDir.getAbsolutePath(), e);
+                    throw new IOException("파일 저장 실패: " + boardFile.getOriginalFilename(), e);
                 }
             }
         }

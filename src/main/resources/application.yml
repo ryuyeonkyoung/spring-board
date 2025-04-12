@@ -23,3 +23,6 @@ spring:
         format_sql: true # SQL 포맷팅
     hibernate:
       ddl-auto: update # create/update
+
+file:
+  upload-dir: C:/dev/IntelliJ/spring-realworld-board/uploads
