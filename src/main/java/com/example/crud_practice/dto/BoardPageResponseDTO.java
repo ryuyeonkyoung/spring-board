@@ -4,14 +4,11 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-/* *
- * [설계 목적: final 필드 사용]
- * 응답 DTO를 불변 객체로 유지하기 위해 필드를 final로 선언함.
- * 모든 필드가 final이므로 @Setter은 필요 없음
- */
+// 응답(Response) DTO: final 필드 사용
 @Getter
 @RequiredArgsConstructor
-public class BoardPageResponse {
+@ToString
+public class BoardPageResponseDTO {
     private final Long id;
     private final String boardWriter;
     private final String boardTitle;
