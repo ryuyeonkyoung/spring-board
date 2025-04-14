@@ -1,0 +1,25 @@
+# 개인 PC 실행용
+# 로컬 파일 저장, dev DB 연결
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/db_yeon?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: 1234
+
+  thymeleaf:
+    cache: false
+
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    open-in-view: false
+    show-sql: true # 디버깅용. Hibernate가 실행하는 SQL 쿼리를 콘솔에 출력
+    properties:
+      hibernate:
+        format_sql: true # SQL 포맷팅
+    hibernate:
+      ddl-auto: none
+
+file:
+  upload-dir: C:/dev/IntelliJ/spring-realworld-board/uploads

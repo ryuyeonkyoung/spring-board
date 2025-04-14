@@ -1,8 +1,14 @@
+# 개발팀용 WAS 서버용 설정
+# S3 파일 저장, 실제 개발 서버
 # 디버깅이 목적 (SQL로그와 바인딩 값 확인)
+
 spring:
-  config:
-    activate:
-      on-profile: dev
+  datasource:
+    # 지금은 local과 같은 서버 사용중
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/db_yeon?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: 1234
 
 logging:
   level:

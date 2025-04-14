@@ -1,8 +1,14 @@
+# 운영용 서버
+# 로그 압축, 파일 저장 경로, 보안 DB
 # 콘솔 출력 최소화 + 로그 파일 저장 + 용량 제한이 목적
+
 spring:
-  config:
-    activate:
-      on-profile: prod
+  datasource:
+    # 지금은 local과 같은 서버 사용중
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/db_yeon?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: 1234
 
 logging:
   level:
