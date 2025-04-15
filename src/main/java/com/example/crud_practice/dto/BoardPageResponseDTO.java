@@ -4,7 +4,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-// 응답(Response) DTO: final 필드 사용
+// 응답용 DTO: final + Builder
 @Getter
 @RequiredArgsConstructor
 @ToString

@@ -21,6 +21,7 @@ import java.util.Optional;
 public class CommentService {
     private final CommentRepository commentRepository;
     private final BoardRepository boardRepository;
+    private final CommentMapper commentMapper;
 
     // 댓글 저장
     public Long save(CommentDTO commentDTO) {
@@ -56,7 +57,7 @@ public class CommentService {
         // 3. Entity → DTO 변환
         List<CommentDTO> commentDTOList = new ArrayList<>();
         for (CommentEntity commentEntity : commentEntityList) {
-            CommentDTO commentDTO = CommentMapper.toCommentDTO(commentEntity, boardId);
+            CommentDTO commentDTO = commentMapper.toCommentDTO(commentEntity, boardId);
             commentDTOList.add(commentDTO);
         }
 
