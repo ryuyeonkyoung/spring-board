@@ -1,9 +1,6 @@
 package com.example.crud_practice.dto;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -13,7 +10,9 @@ import java.util.List;
 @Getter
 @Setter // 가변성을 허용해야 함
 @ToString // 디버깅 및 로깅용
-@NoArgsConstructor // 요청 DTO는 컨트롤러에서 바인딩 시 기본 생성자가 필요함
+@Builder
+@RequiredArgsConstructor
+@AllArgsConstructor
 //@Builder // 요청 파라미터 바인딩에는 builder의 사용이 큰 장점이 없음.
 public class BoardRequestDTO {
     private Long id;
