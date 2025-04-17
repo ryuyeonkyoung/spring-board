@@ -55,6 +55,7 @@ public class BoardService {
     private final BoardRepository boardRepository;
     private final BoardFileRepository boardFileRepository;
     private final LocalFileStorageService localFileStorageService;
+    private final BoardMapper boardMapper;
 
     /**
      * 게시글 저장 처리
@@ -136,7 +137,7 @@ public class BoardService {
         List<BoardEntity> boardEntityList = boardRepository.findAll();
         List<BoardRequestDTO> BoardRequestDTOList = new ArrayList<>();
         for (BoardEntity boardEntity: boardEntityList) {
-            BoardRequestDTOList.add(BoardMapper.toBoardRequestDTO(boardEntity));
+            BoardRequestDTOList.add(boardMapper.toBoardRequestDTO(boardEntity));
         }
         return BoardRequestDTOList;
     }
@@ -156,7 +157,7 @@ public class BoardService {
                     log.error("게시글 조회 실패: ID = {}", id, ex);
                     return ex;
                 }); // 예외처리 : throw + optional (null 가능해서)
-        return BoardMapper.toBoardRequestDTO(boardEntity);
+        return boardMapper.toBoardRequestDTO(boardEntity);
     }
 
     /**
@@ -207,7 +208,7 @@ public class BoardService {
         Page<BoardEntity> boardEntities =
                 boardRepository.findAll(PageRequest.of(page, pageLimit, Sort.by(Sort.Direction.DESC, "id")));
 
-        return boardEntities.map(BoardMapper::toOffsetPageDTO);
+        return boardEntities.map(boardMapper::toOffsetPageDTO);
     }
 
     /*
@@ -224,7 +225,7 @@ public class BoardService {
 
         List<BoardEntity> boardEntities = boardRepository.findByCursor(cursor, pageable);
         return boardEntities.stream()
-                .map(BoardMapper::toCursorPageDTO)
+                .map(boardMapper::toCursorPageDTO)
                 .collect(Collectors.toList());
     }
 }

@@ -4,75 +4,45 @@ import com.example.crud_practice.dto.BoardPageResponseDTO;
 import com.example.crud_practice.dto.BoardRequestDTO;
 import com.example.crud_practice.entity.BoardEntity;
 import com.example.crud_practice.entity.BoardFileEntity;
-import lombok.extern.slf4j.Slf4j;
+import org.mapstruct.*;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-// FIXME: MapStruct로 리팩터링 예정 (현재는 수동 매핑 + 예외 처리 포함)
-@Slf4j
-public class BoardMapper {
-    public static BoardRequestDTO toBoardRequestDTO(BoardEntity boardEntity) {
-        // boardEntity → BoardRequestDTO
-        BoardRequestDTO boardRequestDTO = BoardRequestDTO.builder()
-                .id(boardEntity.getId())
-                .boardWriter(boardEntity.getBoardWriter())
-                .boardPass(boardEntity.getBoardPass())
-                .boardTitle(boardEntity.getBoardTitle())
-                .boardContents(boardEntity.getBoardContents())
-                .boardHits(boardEntity.getBoardHits())
-                .boardCreatedTime(boardEntity.getCreatedTime())
-                .boardUpdatedTime(boardEntity.getUpdatedTime())
-                .build();
+@Mapper(componentModel = "spring")
+public interface BoardMapper {
 
+    // boardEntity → BoardRequestDTO
+    @Mapping(target = "originalFileName", source = "boardFileEntityList", qualifiedByName = "toOriginalFileNameList")
+    @Mapping(target = "storedFileName", source = "boardFileEntityList", qualifiedByName = "toStoredFileNameList")
+    @Mapping(target = "fileAttached", expression = "java(boardEntity.getFileAttached())")
+    BoardRequestDTO toBoardRequestDTO(BoardEntity boardEntity);
 
-        // final이 아닌 필드는 setter로 별도 주입
-        if (boardEntity.getFileAttached() == 0) {
-            boardRequestDTO.setFileAttached(0); // 0
-        } else {
-            List<String> originalFileNameList = new ArrayList<>();
-            List<String> storedFileNameList = new ArrayList<>();
-            boardRequestDTO.setFileAttached(boardEntity.getFileAttached()); // 1
-            // FIXME: 반복문 매서드로 분리, Optional 사용 검토
-            for (BoardFileEntity boardFileEntity : boardEntity.getBoardFileEntityList()) {
-                originalFileNameList.add(boardFileEntity.getOriginalFileName());
-                storedFileNameList.add(boardFileEntity.getStoredFileName());
-            }
+    // boardEntity → BoardPageResponseDTO (offset paging)
+    @Named("toBoardPageResponseDTO")
+    BoardPageResponseDTO toOffsetPageDTO(BoardEntity boardEntity);
 
-            boardRequestDTO.setOriginalFileName(originalFileNameList);
-            boardRequestDTO.setStoredFileName(storedFileNameList);
-        }
-
-        return boardRequestDTO;
+    // boardEntity → BoardPageResponseDTO (cursor paging)
+    @Named("toCursorPageDTO")
+    default BoardPageResponseDTO toCursorPageDTO(BoardEntity boardEntity) {
+        return toOffsetPageDTO(boardEntity);
     }
 
-    public static BoardPageResponseDTO toOffsetPageDTO(BoardEntity board) {
-        try {
-            return new BoardPageResponseDTO(
-                    board.getId(),
-                    board.getBoardWriter(),
-                    board.getBoardTitle(),
-                    board.getBoardHits(),
-                    board.getCreatedTime()
-            );
-        } catch (Exception e) {
-            log.error("BoardPageResponseDTO 매핑 실패: boardEntity = {}", board, e);
-            throw e;
-        }
+    // 파일명 리스트 매핑 메서드
+    // (List<BoardFileEntity> → List<String> 자동 매핑 불가 → @Named 커스텀 매핑 메서드 생성)
+    @Named("toOriginalFileNameList")
+    default List<String> toOriginalFileNameList(List<BoardFileEntity> fileEntityList) {
+        if (fileEntityList == null) return null;
+        return fileEntityList.stream()
+                .map(BoardFileEntity::getOriginalFileName) // List<BoardFileEntity> → List<String>
+                .collect(Collectors.toList());
     }
 
-    public static BoardPageResponseDTO toCursorPageDTO(BoardEntity board) {
-        try {
-            return new BoardPageResponseDTO(
-                    board.getId(),
-                    board.getBoardWriter(),
-                    board.getBoardTitle(),
-                    board.getBoardHits(),
-                    board.getCreatedTime()
-            );
-        } catch (Exception e) {
-            log.error("BoardPageResponseDTO 매핑 실패: boardEntity = {}", board, e);
-            throw e;
-        }
+    @Named("toStoredFileNameList")
+    default List<String> toStoredFileNameList(List<BoardFileEntity> fileEntityList) {
+        if (fileEntityList == null) return null;
+        return fileEntityList.stream()
+                .map(BoardFileEntity::getStoredFileName)
+                .collect(Collectors.toList());
     }
 }
