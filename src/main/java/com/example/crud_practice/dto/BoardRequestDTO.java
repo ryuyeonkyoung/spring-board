@@ -6,14 +6,12 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.List;
 
-// 요청(Request) DTO: @Setter, @ToString, @NoArgsConstructor
+// 요청용 DTO: @Setter + @Valid
+// @Builder는 @Valid와 충돌할 수 있어 사용하지 않음
 @Getter
 @Setter // 가변성을 허용해야 함
+@NoArgsConstructor
 @ToString // 디버깅 및 로깅용
-@Builder
-@RequiredArgsConstructor
-@AllArgsConstructor
-//@Builder // 요청 파라미터 바인딩에는 builder의 사용이 큰 장점이 없음.
 public class BoardRequestDTO {
     private Long id;
     private String boardWriter;
