@@ -1,6 +1,6 @@
-# spring-realworld-board
+# spring-board
 
-Spring Boot와 JPA 기반의 게시판 서비스로, 실사용 수준의 구조와 기능 구현을 목표로 합니다.
+학습을 위한 Spring Boot와 JPA 기반의 게시판 서비스입니다.
 로그인/회원가입, JWT 인증, 예외 처리 등 실무에서 요구되는 기능과 구조를 학습하며 적용하고 있습니다.
 
 ## 🎯 주요 목표 (기획 단계에서 고려 중)
