@@ -1,5 +1,5 @@
 # spring-realworld-board
-Spring Boot와 JPA 등 필요한 기술들을 학습하기 위한 개인 레포입니다.<br>
+Spring Boot와 JPA 등 필요한 기술들을 학습하기 위한 개인 레포지토리입니다.<br>
 이후 UMC 스터디에 참여하여 부족한 역량을 이어서 학습하였습니다.
 
 > 참고 강의/코드
