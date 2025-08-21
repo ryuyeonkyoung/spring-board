@@ -1,13 +1,6 @@
 # spring-realworld-board
-
-Spring Boot와 JPA 기반의 게시판 서비스로, 실사용 수준의 구조와 기능 구현을 목표로 합니다.
-로그인/회원가입, JWT 인증, 예외 처리 등 실무에서 요구되는 기능과 구조를 학습하며 적용하고 있습니다.
-
-## 🎯 주요 목표 (기획 단계에서 고려 중)
-- 실무 환경을 고려한 인증/인가 구조 학습 및 구현 연습
-- 사용자 권한에 따른 기능 분리 및 예외 처리 설계 적용
-- 도메인 중심 구조(Domain-Driven Design)의 개념 실습
-- 계층 구조별 역할 분리 (Controller, Service, Repository) 설계 시도
+Spring Boot와 JPA 등 필요한 기술들을 학습하기 위한 개인 레포입니다.<br>
+이후 UMC 스터디에 참여하여 부족한 역량을 이어서 학습하였습니다.
 
 > 참고 강의/코드
 > - [코딩레시피 - 스프링부트 게시판 프로젝트](https://www.youtube.com/watch?v=YshcPPHClR4&list=PLV9zd3otBRt7jmXvwCkmvJ8dH5tR_20c0)
